@@ -1,0 +1,67 @@
+\documentclass[UKenglish]{uiomasterthesis} 
+\usepackage[utf8]{inputenc}                 %% ... or latin1
+\usepackage[T1]{url}\urlstyle{sf}
+\usepackage{babel, csquotes, graphicx, textcomp, varioref}
+\usepackage{uiomasterfp}
+\usepackage[backend=biber,style=numeric-comp, maxbibnames=10]{biblatex}
+\usepackage[hidelinks, hypertexnames=false]{hyperref}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{blkarray}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcounter{subproject}
+\renewcommand{\thesubproject}{\alph{subproject}}
+\newenvironment{subproj}{
+		\begin{description}
+				\item[\refstepcounter{subproject}(\thesubproject)]
+		\end{description}}
+	
+\title{Rethinking Multilevel K-Way Graph Partitioning in Today's Hardware Landscape}        %% ... or whatever
+%\subtitle{Any short subtitle}         %% ... if any
+\author{Riccardo Ieva}                      %% ... or whoever 
+
+\addbibresource{Sources/sources.bib}            %% ... or whatever
+
+\begin{document}
+	\uiomasterfp[dept={Department of Informatics},  %% ... or your department
+	program={Informatics: Programming and Systems Architecture},                        %% ... or your study program
+	nosp,
+	supervisors={Xing Cai\and James D. Trotter}     %% if more than one
+	]                                     %% ... or short
+	\frontmatter{}
+	\begin{abstract}
+		Here come 3--6 sentences describing your thesis.
+	\end{abstract}
+
+	\begin{preface}
+	Here comes your preface, including acknowledgments and thanks.
+	\end{preface}
+	
+	\tableofcontents{}                         
+	\listoffigures{}                           
+	\listoftables{}
+	\listofalgorithms{}
+	\chapter*{Acronyms}
+	\begin{tabular}{@{}ll@{}}
+		\textbf{GP}   & Graph Partitioning\\
+		\textbf{GPP}   & Graph Partitioning Problem\\
+		\textbf{GPU}   &Graphics Processing Unit\\
+		\textbf{CPU}   &Central Processing Unit\\
+		\textbf{MPI}   & Message Passing Interface \\
+	\end{tabular}
+	\clearpage          
+	\mainmatter{}
+	\include{Introduction/Introduction}
+	\include{Introduction/background_motivation}
+	\include{Multilevel_kway/multilevel_kway}	                
+	\include{Project/volume_calculation_detailed}
+	\chapter{Results}
+	\chapter{Conclusions and Future Work}                     
+	\chapter{Results}                     
+	\chapter{Future Work}
+	\backmatter{}
+	\printbibliography
+\end{document}

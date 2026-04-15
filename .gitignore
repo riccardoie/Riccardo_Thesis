@@ -1,0 +1,59 @@
+## Core LaTeX auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+## Bibliography
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+## Build tool artifacts
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+## Compiled output (keep .tex, ignore .pdf etc.)
+*.dvi
+*.xdv
+*.ps
+*.pdf
+
+## Package/class specific
+*.nav
+*.pre
+*.snm
+*.vrb
+*.ind
+*.ilg
+*.idx
+*.ist
+*.glg
+*.glo
+*.gls
+*.glsdefs
+
+## latexrun
+latex.out/
+
+## hyperref
+*.brf
+
+## minted
+_minted*
+*.pyg

@@ -1,0 +1,31 @@
+\chapter{Introduction}
+%%
+The demand for computational resources in modern scientific and engineering applications keeps increasing, making parallel computing an essential area of development. While processor performance continues to improve, the growth in single-core performance has slowed considerably since the end of Dennard scaling~\cite{hennessy_new_2019}, making it impractical to tackle the largest problems on a single processor alone. Instead, it has become necessary to distribute these workloads across the many processors of a parallel computing system.
+
+In order to compute large communicating tasks in parallel computing, many models have been proposed that represent them as graphs and hypergraphs~\cite{umpa_2013, CatalyurekU.V.1999Hdfp, two_dimensional_part2010, hendrickson_graph_2000, WalshawC.1997PDGP}. The vertices correspond to units of computation and the edges encode data dependencies between them~\cite{hendrickson_graph_2000}. Efficiently distributing the computation then becomes a question of how to partition this graph among processors: balancing the workload evenly while minimizing the communication between them. This is also known as the \emph{graph partitioning problem}. Although graph partitioning is known to be NP-complete, a variety of algorithms have been proposed that produce good quality solutions in practice~\cite{karypis_analysis_1995, karypis_multilevelk-way_1998, karypis_parallel_1999, hendrickson_multilevel_1995}. Beyond parallel computing, graph partitioning plays a critical role in numerous other application areas, including task scheduling, neural network simulations, operations research and more.
+
+Most modern partitioning algorithms optimize for \emph{edge cut} (see Section~\ref{subs:objective_functions}), seeking to minimize the number of inter-partition edges. The appeal of this metric lies in its simplicity: it is easy to compute, and for the structured meshes that dominate scientific computing, it correlates reasonably well with actual communication costs~\cite{hendrickson_graph_2000}. 
+%As Hendrickson and Kolda~\cite{hendrickson_graph_2000} observe, vertices in such meshes have bounded degree, which limits the discrepancy between edge cut and actual communication, and the geometric regularity of the problem ensures that good partitions exist.
+However, edge cut has several well known shortcomings as a representation for communication~\cite{hendrickson_graph_2000}. First, it over counts \textit{communication volume} (see Section~\ref{subs:objective_functions}): a vertex with multiple edges crossing into the same partition needs to be communicated only once, yet each edge is counted separately when using edge cut. Second, the metric ignores data communication latency, the startup cost when sharing data between partitions, which can dominate communication cost when the size of the communicated data is small. Third, and most relevant to this work, minimizing the \emph{total} edge cut does not account for how communication is distributed across partitions. In a parallel application, performance is generally limited by the slowest processor~\cite{hendrickson_graph_2000}, meaning that a globally balanced distribution might create a bottleneck on one processor. 
+
+Karypis and Moulitsas highlighted the need for partitioning algorithms that account for heterogeneous architectures and proposed using \emph{communication volume} as an optimization objective instead of edge cut~\cite{moulitsas_architecture_2008}. This communication volume objective was subsequently added into the METIS software package. However, METIS focuses on the total communication volume without considering how volume is distributed among partitions. Regardless of the architecture, focusing only on the total volume of a graph may lead to bottlenecks in some partitions.
+
+\section{Thesis Goal}
+In this thesis, we develop a new approach called \textit{NVOL}, based on the communication volume objective in METIS that extends the optimization from a total communication volume perspective to a \emph{per partition} perspective. By distributing the communication burden more evenly across partitions, our goal is to improve the performance of parallel applications, leading to higher efficiency and better utilization of available hardware.  This not only opens the possibility of solving more complex problems, but also of reducing energy consumption in a domain where this carries both environmental and economic significance. Additionally, we lay the groundwork for incorporating hardware-specific information into the partitioning algorithm, which would enable further refinement of the load balancing to target the characteristics of a particular machine.
+\section{Thesis Structure}
+\textbf{Chapter 2:} \textit{Motivation and Background}
+\begin{quote}
+	Chapter 2 covers some of the areas where graph partitioning is relevant. It also shows some of the needs today for more research in this field and explains the goal of this thesis.
+\end{quote}
+\textbf{Chapter 3:} \textit{Multilevel K-Way Graph Partitioning}
+\begin{quote}
+	Chapter 3 discusses the Multilevel K-way graph partitioning algorithm used in METIS. This approach achieves a good balance between quality and run time, making it a popular option for large graphs.  
+\end{quote}
+\textbf{Chapter 4:}
+\begin{quote}
+	...
+\end{quote}
+\textbf{Chapter 5:}
+\begin{quote}
+	...
+\end{quote}
