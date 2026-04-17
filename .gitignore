@@ -32,7 +32,6 @@
 *.dvi
 *.xdv
 *.ps
-*.pdf
 
 ## Package/class specific
 *.nav
