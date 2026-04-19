@@ -1,5 +1,8 @@
-\chapter{Multilevel K-Way Graph Partitioning}
-This chapter presents the Multilevek K-way Graph Partitioning algorithm which is one of the most widespread GP algorithms. Throughout each section METIS own implementation will be mentioned both for the edge cut and communication volume metric. 
+\chapter{Multilevel K-Way Graph Partitioning}\label{chap:multilevel-kway}
+This chapter presents the Multilevek K-way Graph Partitioning algorithm which is one of the most widespread GP algorithms. Each section will explain in detail the phases of the multilevel approach 
+
+
+Throughout each section METIS own implementation will be mentioned both for the edge cut and communication volume metric. 
 
 \section{Why Multilevel K-way?}
 There are many algorithms that are able to produce good partitions.The techniques vary from global methods that partition the graph directly, to breadth first search to methods from computational geometry and linear algebra~\cite{buluc_recent_2016}. The main idea behind multilevel k-way partitioning is to coarsen down the graph to a smaller graph first. On this smaller graph an initial partition is performed on the small graph before it is uncoarsened back up to its original size. For each uncoarsening level the partition is refined. The next sections in this chapter will go in detail on how METIS implements this approach.
