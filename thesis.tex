@@ -12,6 +12,9 @@
 \usepackage{enumitem}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{tikz, pgf}
+\usetikzlibrary{decorations.pathmorphing, arrows.meta, calc, positioning, backgrounds, shapes, fit}
+
 \newcounter{subproject}
 \renewcommand{\thesubproject}{\alph{subproject}}
 \newenvironment{subproj}{
@@ -57,12 +60,11 @@
 	\mainmatter{}
 	\include{Introduction/Introduction}
 	\include{Introduction/background_motivation}
-	\include{Multilevel_kway/multilevel_kway}	                
+	\include{Multilevel_kway/multilevel_kway}	                             	
 	\include{Project/volume_calculation_detailed}
 	\include{Results/tmp}
 	\chapter{Results}
-	\chapter{Conclusions and Future Work}                     
-	\chapter{Results}                     
+	\chapter{Conclusions}                     
 	\chapter{Future Work}
 	\backmatter{}
 	\printbibliography

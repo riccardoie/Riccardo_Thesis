@@ -1,30 +1,48 @@
 \chapter{Multilevel K-Way Graph Partitioning}\label{chap:multilevel-kway}
-This chapter presents the Multilevek K-way Graph Partitioning algorithm which is one of the most widespread GP algorithms. Each section will explain in detail the phases of the multilevel approach 
+This chapter presents the Multilevel K-way Graph Partitioning algorithm which is one of the most widespread GP algorithms. Each section will explain in detail the phases of the multilevel approach with special focus on the techniques used in the partitioner used in this thesis.  
+
+\section{Preliminaries}
+The overall structure of a multilevel k-way graph partitioning algorithm is fairly straightforward. The process begins by coarsening the input graph until it is reduced to a size of only a few thousand vertices. At this coarsest level, an initial k-way partitioning is computed using
+recursive bisection (see Section~\ref{recursive_bisection})~\cite{KarypisGeorge1998AFaH, KarypisGeorge1999PMkP}. The graph is then uncoarsened back to its original size in successive steps. At each level of uncoarsening, the partitioning is refined to improve quality by exploiting the increased degrees of freedom available at the finer level. Karypis and Kumar demonstrate in~\cite{karypis_multilevelk-way_1998} that this multilevel approach yields high quality partitions, often comparable to, or better than, those produced by recursive bisection~\cite{KarypisGeorge1998AFaH}.
+
+In Figure~\ref{fig:multilevel-overview}, this process is illustrated showing how an initial graph $G_0$ is coarsened until it reaches $G_4$ which is smaller in size. At this level an initial partition is performed on the coarsest graph. After that the graph is step by step projected back to its original size, refining the partition at each level in order to minimize the chosen objective function~\cite{KarypisGeorge1999PMkP}.
+
+The multilevel partitioning problem uses the same definitions as in Section~\ref{sec:gpp}. Additionally, we represent a k-way partition through a vector $P$. The vector has a length of $n$, where $n$ is the number of vertices in the graph. Each element of \textit{P} is an integer between 1 and $k$, indicating the partition the vertex belongs to. Specifically, a vertex $v \in V$ assigned to partition \textit{a} will have $P[v] = a$. 
+
+\begin{figure}[h]
+	\centering
+	\scalebox{0.65}{\input{Multilevel_kway/graph_image}}
+	\caption{The phases of the multilevel k-way partitioning algorithm. During the coarsening phase, the vertices are contracted together and the graph size is successively decreased; during the initial partitioning phase, a k-way partition is performed on the smallest graph; and during the uncoarsening phase, the partitions are successively refined and projected back to a larger graph.}
+	\label{fig:multilevel-overview}
+\end{figure}
+
+\section{Coarsening Phase}
+During the coarsening phase, a sequence of increasingly smaller graphs is constructed so as to maintain the structure of the original graph with fewer degrees of freedom. The most common approach is to aggregate groups of vertices into a single coarse vertex through matching~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}. The coarse vertex has a weight equal to the sum of the weights of all the vertices it contains. Additionally, the coarse vertex receives all the edges of the vertices it contains. The vertices that are not matched are simply copied over to the smaller graph. This process is repeated until we reach a graph $G_m$ with a small enough number of vertices~\cite{karypis_analysis_1995}.
+
+For a given graph $G_i = (V_i, E_i)$, a subset of vertices $V^v_i \subseteq V_i$ is merged into a coarse vertex $v \in V_{i+1}$ for the next coarser graph $G_{i+1}$. The coarse vertex $v$ has weight $w(v) = \sum_{u \in V^v_i}w(u)$. This ensures that the total vertex weight is preserved across coarsening levels. To preserve connectivity, the new vertex $v$ receives the union of the edges of the vertices in $V^v_i$. For any neighbor vertex $u$, the edge weight is $w(\{v,u\}) = \sum_{z\in V^v_i}w(\{z,u\})$. This aggregation strategy preserves structural and weight-related properties of the original graph, thereby enabling efficient and balanced processing at coarser levels~\cite{karypis_multilevelk-way_1998}.
+ 
+As previously mentioned, matching is the most popular coarsening strategy. Formally, the idea is to contract pairs of matched vertices, where we define a matching as a set of edges no two of which share a vertex~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}. Generally, a matching is considered good if it contains many edges. To achieve this, \textit{maximal matchings} are used. A matching is maximal if any edge in the graph that is not contained in the matching has at least one of its endpoints matched~\cite{KarypisGeorge1998AFaH}. The following subsection describes in detail the implementation of Sorted Heavy Edge Matching (SHEM), which is the coarsening algorithm employed by the partitioner used in this thesis. For further reading on coarsening algorithms and different options, we refer the reader to~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}.
+
+\subsection{Sorted Heavy Edge Matching}
+SHEM begins by generating a random permutation of the graph's vertices, which is then sorted based on vertex degrees. Each vertex is scored by the square of its degree and placed into buckets accordingly. The buckets are then sorted from lowest degree to highest. This ordering ensures that low-degree vertices, which have fewer opportunities for matching, are prioritized and thus more likely to be successfully matched. Delaying them would increase the chance of remaining unmatched. Once the vertices are sorted, they are traversed in order. For each unmatched vertex $u$, the algorithm selects the unmatched neighboring vertex $v$ connected to $u$ via the heaviest incident edge. The edge $\{u,v\}$ is then added to the maximal matching $M_i$ and both $u$ and $v$ are marked as matched. If no suitable neighbor exists, the vertex $u$ remains unmatched. This process continues until all vertices have been processed.
+
+The greedy nature of SHEM tends to preserve strong edge connections in the coarser graph, contributing to a significant reduction in total edge weight and, consequently, in the number of edge cuts~\cite{KarypisGeorge1998AFaH, karypis_parallel_1999}. As shown in \cite{karypis_analysis_1995} by Karypis and Kumar, since the coarser graph has smaller edge weight, it also has a smaller edge cut. 
+
+\section{Initial Partitioning Phase}
+In the partitioning phase, the coarsest graph is divided into $k$ partitions such that each partition contains approximately equal total vertex weight. The objective used in our partitioner is edge cut for this coarser graph. The reason for this is that the simplified structure makes it more representative than at an higher degree of freedom. Moreover, using edge cut as objective makes this step much less demanding computationally. 
 
 
-Throughout each section METIS own implementation will be mentioned both for the edge cut and communication volume metric. 
 
-\section{Why Multilevel K-way?}
-There are many algorithms that are able to produce good partitions.The techniques vary from global methods that partition the graph directly, to breadth first search to methods from computational geometry and linear algebra~\cite{buluc_recent_2016}. The main idea behind multilevel k-way partitioning is to coarsen down the graph to a smaller graph first. On this smaller graph an initial partition is performed on the small graph before it is uncoarsened back up to its original size. For each uncoarsening level the partition is refined. The next sections in this chapter will go in detail on how METIS implements this approach.
+As described by Karypis and Kumar in \cite{karypis_multilevelk-way_1998} and \cite{karypis_parallel_1996}, the initial partitioning of the coarsest graph is obtained using a multilevel recursive bisection (MLRB) algorithm, which they previously introduced in \cite{karypis_fast_1998}. 
 
-
+MLRB achieves k-way partitioning by recursively applying bisection to the resulting subgraphs. At each step the graph passed as an argument is bisected into two subgraphs. The first subgraph is then further partitioned into $k/2$(with no remainder), and the second one into $k-(k/2)$(with no remainder) parts. This ensures that the recursion ultimately reaches base cases where $k= 2$ or $k=3$. In the case $k=2$, the two subgraphs from the bisection are returned as partitions. For $k=3$, one subgraph is returned directly, while the other one is bisected once more. Given the coarsest graph as a starting point, MLRB is able to produce such partitions in a very short amount of time given a graph sufficiently greater than $k$\cite{karypis_multilevelk-way_1998}. 
 
 
-%Explain how multilevel works briefly, point to next sections that will go in detail
-%Examples in how it outperforms other algorithms. O(E) time complexity for example, drastically faster than the rest
-%(maybe specify kway its better, as its faster than bisection. By a factor of O(logk))
-%Metis/ParMetis and Scotch are widely used implementations of multilevel kway 
-%Maybe a sentence what others sacrifice (spectral methods are expensive, geometric methods need coordinates and often compromise quality) makes the multilevel k-way choice feel motivated rather than just asserted.
-
-Most tools and algorithms implement the \textit{multilevel} heuristic~\cite{GilbertMichaelS.2024JMGP}. Its popularity can be attributed to the fact that this approach tends to perform better than others for large graphs~\cite{buluc_recent_2016, KarypisGeorge1999PMkP, KarypisGeorge1998AFaH}.
+\section{Uncoarsening Phase}
 
 
-
-
-
-
-This section will present the multilevel approach as the most important in parallel computing\\
-Coarsening phase\\
-Initial partition \\
-Uncoarsening and refinement\\
-All the way with examples of how Metis is implemented, especially for the volume objective. 
+%This section will present the multilevel approach as the most important in parallel computing\\
+%Coarsening phase\\
+%Initial partition \\
+%Uncoarsening and refinement\\
+%All the way with examples of how Metis is implemented, especially for the volume objective. 

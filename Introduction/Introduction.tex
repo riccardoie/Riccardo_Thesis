@@ -14,7 +14,7 @@ Karypis and Moulitsas highlighted the need for partitioning algorithms that acco
 
 Efficiently distributing computation across processors is central to high-performance computing, and graph partitioning is the standard technique for achieving this. In \textit{Graph Partitioning and Parallel Solvers: Has the Emperor No Clothes?}~\cite{HENDRICKSONB1998Gpap}, Hendrickson concludes that one of the key needs is to develop a more accurate metric for communication cost. Researchers have proposed alternative objectives that target per-processor communication metrics rather than global totals. An example is UMPa~\cite{umpa_2013}, which minimizes the maximum data sent by any single processor in a distributed memory setting.
 
-As Hendrickson noted, objectives of this kind are harder to optimize than the standard edge cut, which partly explains their limited adoption. Despite these difficulties, in this thesis, we present a new objective called \textit{NVOL}. NVOL minimizes the \textit{per-partition} maximum volume, aiming to reduce uneven communication loads. In this thesis, we will answer two questions: Can a partition-aware objective produce better balanced communication loads than a global one? Can the performance of a parallel application be improved in practice by using a partition-aware objective?
+As Hendrickson noted, objectives of this kind are harder to optimize than the standard edge cut, which partly explains their limited adoption. Despite these difficulties, in this thesis, we present a new objective called \textit{NVOL}. NVOL minimizes the \textit{per-partition} maximum volume, aiming to reduce uneven communication loads. Using the METIS software as our baseline multilevel k-way partitioner, we implement this new partition-aware objective and address two questions: Can a partition-aware objective produce better balanced communication loads than a global one? Can the performance of a parallel application be improved in practice by using a partition-aware objective?
 
 %Its goal is to address the bottleneck problem that arises when total volume objectives produce partitions with uneven communication loads.
 %By reducing the per-processor load, we seek to achieve practical improvements in efficiency
@@ -23,7 +23,7 @@ As Hendrickson noted, objectives of this kind are harder to optimize than the st
 %In this thesis, we develop a new approach called \textit{NVOL}, based on the communication volume objective in METIS that extends the optimization from a total communication volume perspective to a \emph{per partition} perspective. By distributing the communication burden more evenly across partitions, our goal is to improve the performance of parallel applications, leading to higher efficiency and better utilization of available hardware.  This not only opens the possibility of solving more complex problems, but also of reducing energy consumption in a domain where this carries both environmental and economic significance. Additionally, we lay the groundwork for incorporating hardware-specific information into the partitioning algorithm, which would enable further refinement of the load balancing to target the characteristics of a particular machine.
 %
 \section{Thesis Structure}
-\textbf{Chapter 2:} \textit{Motivation and Background}
+\textbf{Chapter 2:} \textit{Background}
 \begin{quote}
 	Chapter 2 covers some of the fundamental topics in graph partitioning. It also shows some of the algorithms used today and some applications of graph partitioning algorithms.
 \end{quote}
