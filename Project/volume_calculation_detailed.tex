@@ -96,48 +96,14 @@ Let $C_i[n]$ denote the number of edges connecting $i$ to partition $n$. In Figu
 		G_i[k] \mathrel{+}= w(i)
 	\end{equation}
 \end{enumerate}
-For every adjacent boundary vertex $v$ visited, we check each of the cases above for every partition in either $N_{iv}$, $N_{i-v}$ or $N_i$ depending on the case. The algorithm below displays the flow of how the gain is calculated for a vertex $i$ being considered moved:
-%ADD PSEUDOCODE HERE
-\begin{algorithm}
-	\caption{Global gain calculation}\label{alg:cap}
-	\begin{algorithmic}
-		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
-		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
-			\For{n = 0; n < nparts}
-				\If{n $\in N_i$ AND n $\in N_v$}
-					\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
-				\ElsIf{n $\in N_i$ AND n $\notin N_v$}
-					\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
-				\EndIf
-			\EndFor
-			
-			\If{$P[i] = P[v]$}
-				\ForAll{$n \in N_{i-v}$}
-					\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 1}
-				\EndFor
-			\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] = 1$}	
-				\ForAll{$n \in N_{iv}$}
-					\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 2}
-				\EndFor
-			\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] > 1$}
-				\ForAll{$n \in N_{i-v}$}
-					\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 3}
-				\EndFor
-			\EndIf
-		\EndFor	
-		\If{$C_i[P[i]] = 1$}
-			\ForAll{$n \in N_i$}
-				\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 4}
-			\EndFor
-		\EndIf	
-	\end{algorithmic}
-\end{algorithm}
+For every adjacent boundary vertex $v$ visited, we check each of the cases above for every partition in either $N_{iv}$, $N_{i-v}$ or $N_i$ depending on the case. Algorithm~\ref{alg:cap} in Section~\ref{cv_calc_implementation} shows the flow of how the gain is calculated for a vertex $i$ being considered moved.
+
 \section{Partition specific gain calculation} \label{Partition specific gain calculation}
 To analyze the communication volume at the partition level, we need to expand the strategy shown in Section~\ref{METIS gain calculation}. By only having the global gain for a move, information regarding how this gain affected each partition is missing. 
 
 In order to calculate the volume for a given partition $n$, consider a subset of boundary vertices where each vertex is part of the same partition. The communication volume associated with partition $n$ is then given by
 \begin{equation} \label{partition_volume}
-	\mathrm{partition\_volume}_n = \sum_{v \in V_b \mid P[v] = n} \left| N_v \right| w(v)
+	\mathrm{partition\quad volume}[n] = \sum_{v \in V_b \mid P[v] = n} \left| N_v \right| w(v)
 \end{equation}
 
 We introduce a table $SG_i$, where each row corresponds to a source partition and each column to a destination partition for vertex $i$. The entry $SG_i[n][k]$ represents the gain contribution to partition $n$ when $i$ is moved to partition $k$. In a graph with $m$ partitions, a vertex \textit{i} to partition \textit{n} the total gain satisfies
@@ -195,10 +161,10 @@ Consider the graph in Figure~\ref{3}, consisting of five vertices with unit weig
 
 Vertex \textit{A} has one edge to the blue partition and contributes $1$ to the communication volume. Vertex \textit{B} has two edges incident to the blue partition, but contributes only $1$ under the given definition. Similarly, vertices \textit{D} and \textit{E} each contribute $1$. In contrast, vertex \textit{C} contributes nothing, as all its incident edges are internal to its partition.
 	
-Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B \in \mathbb{R}^2$ has size two.
+Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B$ has size two.
 
 \paragraph{Vertex \textit{A}.}
-Vertices \textit{A} and \textit{B} are in the same partition and both already have connections to the blue partition. Hence, the set $M$ is empty and no gain contribution arises.
+Vertices \textit{A} and \textit{B} are in the same partition and both already have connections to the blue partition. Hence, the set $N_{B-A}$ is empty and no gain contribution arises.
 
 \paragraph{Vertex \textit{C}.}
 Vertex \textit{C} lies in the red partition and has no edges to the blue partition. After moving \textit{B}, \textit{C} gains an inter-partition edge, increasing the communication volume. As shown in \hyperlink{METIS_case_1}{Case 1}, this yields a negative gain:
@@ -217,7 +183,7 @@ G_B[\text{blue}] \mathrel{+}= 1.
 \hyperlink{METIS_case_4}{Case 4} does not apply, as \textit{B} has multiple connections within its original partition. Summing all contributions yields total gain $0$, so the communication volume remains unchanged.
 
 \paragraph{Partition-specific formulation.}
-Using the formulation from Section~\ref{Partition specific gain calculation}, we obtain the same result. We use the table $SG_B \in \mathbb{R}^{2 \times 2}$ to store each volume change. As shown above only vertices \textit{C} and \textit{E} contribute:
+Using the formulation from Section~\ref{Partition specific gain calculation}, we obtain the same result. We use the table $SG_B$ with size $2\times 1$ (the source column will always be zeroed out), to store each volume change. As shown above only vertices \textit{C} and \textit{E} contribute:
 \[
 SG_B[\text{red}][\text{blue}] \mathrel{-}= 1, \quad
 SG_B[\text{blue}][\text{blue}] \mathrel{+}= 1.
@@ -236,7 +202,7 @@ We now extend the example to three partitions. Consider the graph in Figure~\ref
 	\caption{Graph with a total communication volume of 8.}
 	\label{three_partition_one_each}
 \end{figure}
-Let \textit{B} be the candidate vertex with neighbors $\{A,C,D,E\}$. Unlike the previous example, \textit{B} may move to either the blue or green partition. Thus, $G_B \in \mathbb{R}^3$ and $SG_B \in \mathbb{R}^{3\times 3}$.
+Let \textit{B} be the candidate vertex with neighbors $\{A,C,D,E\}$. Unlike the previous example, \textit{B} may move to either the blue or green partition. Thus, $G_B$ has size 3 and $SG_B$ $3\times 2$.
 
 \paragraph{Vertex \textit{A}.}
 Vertex \textit{A} is in the same partition as \textit{B}. Since \textit{A} is connected to the blue partition but not the green partition, \hyperlink{METIS_case_1}{Case 1} applies only for a move to green, introducing a new inter-partition edge:
@@ -303,17 +269,17 @@ SG_B[\text{green}][\text{green}] \mathrel{-}= 2.
 \]
 The resulting table $SG_B$ is:
 \[
-\begin{blockarray}{cccc}
-	& \text{red} & \text{blue} & \text{green} \\
-	\begin{block}{c(ccc)}
-		\text{red}   & 0 & 2 & 1 \\
-		\text{blue}  & 0 & -1 & 0 \\
-		\text{green} & 0 & 1 & -1 \\
+\begin{blockarray}{ccc}
+	& \text{blue} & \text{green} \\
+	\begin{block}{c(cc)}
+		\text{red}   & 2 & 1 \\
+		\text{blue}  & -1 & 0 \\
+		\text{green} & 1 & -1 \\
 	\end{block}
 \end{blockarray}
 \]
 
-Each column corresponds to a destination partition, and each row describes how a partition's volume changes. One can verify that the column sums recover $G_B$: the sums are $0+0+0=0$, $2+(-1)+1=2$, and $1+0+(-1)=0$, consistent with $G_B = [0,2,0]$. This formulation provides finer insight: although moving \textit{B} to the green partition leaves the total volume unchanged, it redistributes volume across partitions. In particular, the blue partition experiences an increase in volume at the partition level.
+Each column corresponds to a destination partition, and each row describes how a partition's volume changes. One can verify that the column sums recover $G_B$: the sums are 0 (the red partition is implied as no move occurs if the vertex stays in the same partition it already part of), $2+(-1)+1=2$ and $1+0+(-1)=0$ , consistent with $G_B = [0,2,0]$. This formulation provides finer insight: although moving \textit{B} to the green partition leaves the total volume unchanged, it redistributes volume across partitions. In particular, the blue partition experiences an increase in volume at the partition level.
 
 \begin{figure}[H]
 	\centering
@@ -331,7 +297,7 @@ Each column corresponds to a destination partition, and each row describes how a
 	\end{minipage}
 \end{figure}
 \subsection{Case 4 example}
-None of the preceding examples illustrate a scenario in which Case 4 is relevant. To clarify how such a case may arise and how it affects the communication volume, consider Figure~\ref{case4_example}, where all vertices carry unit weight. The partition assignment is as follows: red $\{A,B,C,D\}$, blue $\{D,E\}$, and green $\{F\}$. The total communication volume is $8$, with individual partition volumes of $3$, $3$, and $2$, respectively. As in the previous example, let $G_C \in \mathbb{R}^3$ and $SG_C \in \mathbb{R}^{3\times 3}$.
+None of the preceding examples illustrate a scenario in which Case 4 is relevant. To clarify how such a case may arise and how it affects the communication volume, consider Figure~\ref{case4_example}, where all vertices carry unit weight. The partition assignment is as follows: red $\{A,B,C,D\}$, blue $\{D,E\}$, and green $\{F\}$. The total communication volume is $8$, with individual partition volumes of $3$, $3$, and $2$, respectively. As in the previous example, let $G_C$ have size 3 and $SG_C$  size $3\times 3$.
 
 \begin{figure}[H]
 	\centering
@@ -356,7 +322,7 @@ The candidate vertex is $C$, which has no internal edges within the red partitio
 	SG_C[\text{blue}][\text{green}] \mathrel{+}= 1
 \end{align*}
 
-\paragraph{Vertex \textit{F}.} Vertex $F$ has two edges connecting it to the red partition; however, the set $M$ is empty, meaning Case 3 does not apply and vertex $F$ contributes no change to the gain
+\paragraph{Vertex \textit{F}.} Vertex $F$ has two edges connecting it to the red partition; however, the set $N_{C-F}$ is empty, meaning Case 3 does not apply and vertex $F$ contributes no change to the gain
 
 \paragraph{Case 4.} Since vertex $C$ has no internal edges, any move will reduce the volume of its source partition. Under normal circumstances, when the candidate vertex has at least one internal edge, moving it leaves the receiving partition's incoming volume unchanged through the candidate. In this case, however, it is necessary to increment the gain for every possible destination partition, yielding:
 \begin{align*}
@@ -376,12 +342,12 @@ SG_C[\text{green}][\text{green}] \mathrel{-}= 2.
 \]
 The resulting table $SG_C$ is:
 \[
-\begin{blockarray}{cccc}
-	& \text{red} & \text{blue} & \text{green} \\
-	\begin{block}{c(ccc)}
-		\text{red}   & 0 & 2 & 2 \\
-		\text{blue}  & 0 & 1 & 1 \\
-		\text{green} & 0 & 1 & -1 \\
+\begin{blockarray}{ccc}
+	& \text{blue} & \text{green} \\
+	\begin{block}{c(cc)}
+		\text{red}   & 2 & 2 \\
+		\text{blue}  & 1 & 1 \\
+		\text{green} & 1 & -1 \\
 	\end{block}
 \end{blockarray}
 \]
@@ -402,10 +368,47 @@ Figures~\ref{case4_example_moved_blue} and~\ref{case4_example_moved_green} show 
 		\end{minipage}
 \end{figure}
 \section{Implementation}\label{cv_calc_implementation}
-Having verified the formulation across several configurations, we now describe how it is integrated into the program. The implementation closely mirrors the case structure presented above
+Having verified the formulation across several configurations, we now describe how it is integrated into the multilevel framework. The implementation in METIS closely mirrors the case structure presented in Sections~\ref{METIS gain calculation}. \ref{Partition specific gain calculation}. As mentioned before we have used METIS as the base to develop NVOL on. The following description works as a bridge between the formal definitions above and the implemented code in the multilevel approach.
+
+\subsection{Global Gain implementation}
+Like it was described in Section~\ref{sec:preparation for refinement} the boundary set is computed used gain to filter and order it. Since gain is bound by the choice of objective function, the approach shown in that section needs to be revisited to suit global communication volume. Once the recomputation of the graph is done, METIS 
 
 
 
+\begin{algorithm}[h]
+	\caption{Global gain calculation}\label{alg:cap}
+	\begin{algorithmic}
+		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
+		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
+		\For{n = 0; n < nparts}
+		\If{n $\in N_i$ AND n $\in N_v$}
+		\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
+		\ElsIf{n $\in N_i$ AND n $\notin N_v$}
+		\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
+		\EndIf
+		\EndFor
+		
+		\If{$P[i] = P[v]$}
+		\ForAll{$n \in N_{i-v}$}
+		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 1}
+		\EndFor
+		\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] = 1$}	
+		\ForAll{$n \in N_{iv}$}
+		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 2}
+		\EndFor
+		\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] > 1$}
+		\ForAll{$n \in N_{i-v}$}
+		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 3}
+		\EndFor
+		\EndIf
+		\EndFor	
+		\If{$C_i[P[i]] = 1$}
+		\ForAll{$n \in N_i$}
+		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 4}
+		\EndFor
+		\EndIf	
+	\end{algorithmic}
+\end{algorithm}
 
 
 %\begin{figure}[H]
