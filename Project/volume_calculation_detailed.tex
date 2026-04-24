@@ -368,11 +368,53 @@ Figures~\ref{case4_example_moved_blue} and~\ref{case4_example_moved_green} show 
 		\end{minipage}
 \end{figure}
 \section{Implementation}\label{cv_calc_implementation}
-Having verified the formulation across several configurations, we now describe how it is integrated into the multilevel framework. The implementation in METIS closely mirrors the case structure presented in Sections~\ref{METIS gain calculation}. \ref{Partition specific gain calculation}. As mentioned before we have used METIS as the base to develop NVOL on. The following description works as a bridge between the formal definitions above and the implemented code in the multilevel approach.
+We now describe how the calculation of communication volume change is integrated into the multilevel framework. As mentioned before we have used METIS as the base to develop NVOL on. The following description works as a bridge between the formal definitions above and the implemented code.
 
-\subsection{Global Gain implementation}
-Like it was described in Section~\ref{sec:preparation for refinement} the boundary set is computed used gain to filter and order it. Since gain is bound by the choice of objective function, the approach shown in that section needs to be revisited to suit global communication volume. Once the recomputation of the graph is done, METIS 
+\subsection{Global gain implementation}
+In Section~\ref{sec:preparation for refinement} the boundary set is computed using gain to filter and order it using edge cut. When using global communication volume, we need to do the same thing using the calculations described in this chapter. 
 
+However, the change in communication volume varies depending on which move is made making it hard to implement this step directly into the preparation phase before refinement. In METIS this issue was resolved by adding the gain calculation as a final step after the preparation is done. Once the graph has been projected and all the underlying structures have been recomputed, a new full scan of the graph is performed to evaluate the possible gains any vertex in the graph has. 
+\begin{algorithm}[h]
+	\caption{Global gain calculation}\label{alg:cap}
+	\begin{algorithmic}
+		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
+		\ForAll{$i \in V$}
+		\If{$|N_i|>0$}										\Comment{Only visit vertices with neighboring partitions}
+		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
+		\For{n = 0; n < nparts}
+		\If{n $\in N_i$ AND n $\in N_v$}
+		\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
+		\ElsIf{n $\in N_i$ AND n $\notin N_v$}
+		\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
+		\EndIf
+		\EndFor
+		
+		\If{$P[i] = P[v]$}
+		\ForAll{$n \in N_{i-v}$}
+		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 1}
+		\EndFor
+		\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] = 1$}	
+		\ForAll{$n \in N_{iv}$}
+		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 2}
+		\EndFor
+		\ElsIf{$P[i] \mathrel{!}= P[v]$ AND $C_v[P[i]] > 1$}
+		\ForAll{$n \in N_{i-v}$}
+		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 3}
+		\EndFor
+		\EndIf
+		\EndFor	
+		\If{$C_i[P[i]] = 1$}
+		\ForAll{$n \in N_i$}
+		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 4}
+		\EndFor
+		\EndIf
+		\State BoundarySet.add(MAX($G_v$))			\Comment{Order by highest possible gain}
+		\EndIf
+		\EndFor	
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Partition specific gain implementation}
 
 
 \begin{algorithm}[h]
@@ -406,10 +448,9 @@ Like it was described in Section~\ref{sec:preparation for refinement} the bounda
 		\ForAll{$n \in N_i$}
 		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 4}
 		\EndFor
-		\EndIf	
+		\EndIf
 	\end{algorithmic}
 \end{algorithm}
-
 
 %\begin{figure}[H]
 %	\centering
