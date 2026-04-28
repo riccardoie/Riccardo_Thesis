@@ -1,0 +1,36 @@
+\chapter{Refinement using communication volume} \label{chapter5}
+This chapter will discuss how the actual refinement is performed. Using the gains calculated in the previous chapter, we will explain how a vertex move is decided. This chapter will also compare how the choice is made using a global communication volume objective function and the partition-aware communication volume used in NVOL.
+
+\section{Global communication volume refinement}
+After the preparation phase is completed, refinement starts and the partitioner visits all the vertices in the boundary set. For each vertex $i$, all the neighboring partitions of $i$ are visited, checking the values of the $G_i$ vector. A vertex move is chosen if it improves the communication volume while maintaining the weight constraints, just like for GR in Section~\ref{sec:greedy_refinement}. The refinement algorithm will look for the move with the highest value in $G_i$ that is allowed by the balance constraints. To prioritize high gain moves, METIS relaxes the balance constraint in proportion to the gain. Using a constant, called the fudge factor $f$, a move to partition $p$ is allowed to exceed the maximum partition weight by $f\cdot G_i[p]$. This allows moves that improve the communication volume significantly at the cost of a few extra vertices in a partition.
+
+When two moves have the same gain, METIS breaks ties using two further criteria: external degree and partition balance. In the case of a tie, it first chooses the move with the highest specific external degree (see Section~\ref{sec:preparation for refinement}). Since all vertices within a coarse vertex are assigned to the same partition upon projection, a move toward a partition with high external degree may reduce volume at finer levels. If instead two candidates have the same gain and the same external degree, the move to the more underweight partition is chosen.
+
+Consider a vertex $i$ being visited in the boundary set during refinement. The following algorithm shows how METIS chooses vertex moves using the logic described above.
+\begin{algorithm}[h]
+	\caption{Global communication volume refinement}\label{alg:ref_vol}
+	\begin{algorithmic}
+		\Require Vertex $i$ with neighbor partitions $N_i[0 \ldots n{-}1]$
+		\For{$k = n{-}1$ \textbf{downto} $0$}  \Comment{Find first feasible candidate}
+%		\State $G \gets g(N_i[k]) + \Delta g$
+		\If{$G_i[N_i[k]] \geq 0$ \textbf{and} $w(N_i[k]) + w_i \leq W^{\max} + f \cdot G_i[N_i[k]]$}
+		\State \textbf{break}
+		\EndIf
+		\EndFor
+		\If{$k < 0$} \textbf{continue to next vertex} \EndIf
+		\For{$j = k{-}1$ \textbf{downto} $0$}  \Comment{Search for a better candidate}
+		\State $p_j \gets N_i[j],\; p_k \gets N_i[k]$
+		\If{$G_i(p_j) > G_i(p_k)$ \textbf{and}
+			$w(p_j) + w_i \leq W^{\max} + f \cdot (G_i(p_j))$}
+		\State $k \gets j$ \Comment{Better gain, relaxed balance}
+		\ElsIf{$G_i(p_j) = G_i(p_k)$ \textbf{and} $ED_{p_j}[i] > ED_{p_k}[i]$
+			\textbf{and} $w(p_j) + w_i \leq W^{\max}$}
+		\State $k \gets j$ \Comment{Same gain, better connectivity}
+		\ElsIf{$G_i(p_j) = G_i(p_k)$ \textbf{and} $ED_{p_j}[i] = ED_{p_k}[i]$
+			\textbf{and} $w(p_j) < w(p_k)$}
+		\State $k \gets j$ \Comment{All else equal, prefer underloaded partition}
+		\EndIf
+		\EndFor
+		\State Move $i$ to $N_i[k]$
+	\end{algorithmic}
+\end{algorithm}
