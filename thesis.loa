@@ -1,3 +1,4 @@
-\contentsline {algorithm}{\numberline {1}{\ignorespaces Global gain calculation}}{27}{algorithm.95}%
-\contentsline {algorithm}{\numberline {2}{\ignorespaces Partition specific gain calculation}}{28}{algorithm.97}%
-\contentsline {algorithm}{\numberline {3}{\ignorespaces Global communication volume refinement}}{30}{algorithm.100}%
+\contentsline {algorithm}{\numberline {1}{\ignorespaces Total gain calculation}}{27}{algorithm.96}%
+\contentsline {algorithm}{\numberline {2}{\ignorespaces Partition specific gain calculation}}{28}{algorithm.98}%
+\contentsline {algorithm}{\numberline {3}{\ignorespaces Total communication volume refinement}}{30}{algorithm.101}%
+\contentsline {algorithm}{\numberline {4}{\ignorespaces NVOL refinement}}{33}{algorithm.106}%
