@@ -18,9 +18,9 @@ The total communication volume objective seeks to improve the total communicatio
 		$E$			& Set of all edges in the graph\\
 		$V_b$		& Set of all boundary vertices in the graph\\
 		$V^{\mathrm{adj}}_i$ & Set of all vertices incident on vertex $i$\\
-		$N_i$        & Set of neighboring partitions of $i$ \\
-		$N_{iv}$      & Set of partitions neighboring both $i$ and $v$\\
-		$N_{i-v}$    & Set of partitions only neighboring $i$\\
+		$N_i$        & Set of neighboring partitions of vertex $i$ \\
+		$N_{iv}$      & Set of partitions neighboring both vertex $i$ and  vertex $v$\\
+		$N_{i-v}$    & Set of partitions only neighboring vertex $i$ and not vertex $v$\\
 		$w(i)$		& Vertex weight of vertex $i$\\
 		$P[i]$		& Partition of vertex $i$\\
 		$C_i[n]$	& Number of edges a vertex $i$ has to a partition $n$\\
@@ -98,10 +98,10 @@ Let $C_i[n]$ denote the number of edges connecting $i$ to partition $n$. In Figu
 		G_i[k] \mathrel{+}= w(i)
 	\end{equation}
 \end{enumerate}
-For every adjacent boundary vertex $v$ visited, we check each of the cases above for every partition in either $N_{iv}$, $N_{i-v}$ or $N_i$ depending on the case. These cases represent all possible changes in communication volume when moving a vertex. Algorithm~\ref{alg:cap} in Section~\ref{cv_calc_implementation} shows the flow of how the gain is calculated for a vertex $i$ being considered moved.
+For every adjacent boundary vertex $v$ visited, we check each of the cases above for every partition in $N_{iv}$, $N_{i-v}$ or $N_i$, depending on the case. These cases represent all possible changes in communication volume when moving a vertex. Algorithm~\ref{alg:cap} in Section~\ref{cv_calc_implementation} shows how the gain is calculated for every vertex $i$ being considered moved. In turn, Section~\ref{sec:METIS refinement} shows how the gain vector $G$ is used during refinement to decide vertex moves.
 
 \section{Partition specific gain calculation} \label{Partition specific gain calculation}
-To analyze the communication volume at the partition level, we need to expand the strategy shown in Section~\ref{METIS gain calculation}. By only having the total gain for a move, information regarding how this gain affected each partition is missing. 
+This section extends the total communication volume gain calculation from Section~\ref{METIS gain calculation}. The total gain contains no information about which partition is affected by a move, information that is required to use NVOL during refinement. Here we show how to decompose the communication volume gain into its individual contributions to each partition. Once computed, this decomposition can be used to refine the graph; how NVOL uses it is discussed in Section~\ref{sec:NVOL refinement}.
 
 In order to calculate the volume for a given partition $n$, consider a subset of boundary vertices where each vertex is part of the same partition. The communication volume associated with partition $n$ is then given by
 \begin{equation} \label{partition_volume}
@@ -136,9 +136,9 @@ It is also necessary to account for how both the source and destination partitio
 	SG_i[P[i]][k] &\label{eq:source_global_gain} \mathrel{+}= \left| N_i \right| \cdot w(i),\\
 	SG_i[k][k]    &\label{eq:destination_global_gain}\mathrel{-}= \left| N_i \right| \cdot w(i).
 \end{align}
-This is referred to as a global term operation, as it reflects the overall redistribution of communication volume between the source and destination partitions of vertex $i$, rather than interactions with individual neighbor vertices. Equation 4.13 represents the volume leaving the source partition, while Equation 4.14 the volume the destination receives. Consequently, it is computed once per vertex move, in contrast to the neighbor specific gain contributions described earlier, which are evaluated separately for each adjacent vertex. 
+This is referred to as a global term operation, as it reflects the overall redistribution of communication volume between the source and destination partitions of vertex $i$, rather than interactions with individual neighbor vertices. Equation~\ref{eq:source_global_gain} represents the volume leaving the source partition, while Equation~\ref{eq:destination_global_gain} the volume the destination receives. Consequently, it is computed once per vertex move, in contrast to the neighbor specific gain contributions described earlier, which are evaluated separately for each adjacent vertex. 
 
-Apart from this distinction, both strategies follow the same case structure; the principal difference lies in how they store the gain information. Rather than recording only the magnitude of the change, NVOL also tracks which partition is affected.
+Apart from this distinction, both strategies follow the same case structure; the principal difference lies in how they store the gain information. Rather than recording only the magnitude of the change, NVOL also tracks which partition is affected. As it will be shown in Section~\ref{sec:NVOL refinement}, the gain table is essential for enforcing the partition-specif  logic used in NVOL, which permits moves that improves a single partition regardless of the total communication volume.
 
 \section{Examples}
 To better understand the definitions of communication volume and gain, we present a sequence of illustrative examples. Each example highlights a particular configuration and demonstrates how gain contributions arise under different vertex moves.
@@ -163,7 +163,7 @@ Consider the graph in Figure~\ref{3}, consisting of five vertices with unit weig
 
 Vertex \textit{A} has one edge to the blue partition and contributes $1$ to the communication volume. Vertex \textit{B} has two edges incident to the blue partition, but contributes only $1$ under the given definition. Similarly, vertices \textit{D} and \textit{E} each contribute $1$. In contrast, vertex \textit{C} contributes nothing, as all its incident edges are internal to its partition.
 	
-Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B$ has size two.
+Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B$ has size two. In practice, however, $G_B$ effectively has size one, since $G_B[red]$ is always zero: a vertex moving from its source partition to the source partition is equivalent to no move at all.
 
 \paragraph{Vertex \textit{A}.}
 Vertices \textit{A} and \textit{B} are in the same partition and both already have connections to the blue partition. Hence, the set $N_{B-A}$ is empty and no gain contribution arises.
@@ -185,7 +185,7 @@ G_B[\text{blue}] \mathrel{+}= 1.
 \hyperlink{METIS_case_4}{Case 4} does not apply, as \textit{B} has multiple connections within its original partition. Summing all contributions yields total gain $0$, so the communication volume remains unchanged.
 
 \paragraph{Partition-specific formulation.}
-Using the formulation from Section~\ref{Partition specific gain calculation}, we obtain the same result. We use the table $SG_B$ with size $2\times 1$ (the source column will always be zeroed out), to store each volume change. As shown above only vertices \textit{C} and \textit{E} contribute:
+Using the formulation from Section~\ref{Partition specific gain calculation}, we obtain the same result. We use the table $SG_B$ with size $2\times 1$ (the source column will always be zeroed out just like the source in the gain vector), to store each volume change. As shown above only vertices \textit{C} and \textit{E} contribute:
 \[
 SG_B[\text{red}][\text{blue}] \mathrel{-}= 1, \quad
 SG_B[\text{blue}][\text{blue}] \mathrel{+}= 1.
@@ -333,7 +333,7 @@ The candidate vertex is $C$, which has no internal edges within the red partitio
  	SG_C[\text{blue}][\text{blue}] \mathrel{+}= 1 \\
  	SG_C[\text{green}][\text{green}] \mathrel{+}= 1
 \end{align*}
-The resulting vector $G_C = [0\,3\,2]$. Accounting for the direct effect of relocating $C$ via Equations~\ref{global_term_from} and~\ref{global_term_dest}:
+The resulting vector $G_C = [0\,3\,2]$. Accounting for the direct effect of relocating $C$ via Equations~\ref{eq:source_global_gain} and~\ref{eq:destination_global_gain}:
 \[
 SG_C[\text{red}][\text{blue}] \mathrel{+}= 2, \quad
 SG_C[\text{red}][\text{green}] \mathrel{+}= 2,
