@@ -23,25 +23,35 @@ NVOL is implemented in the refinement stage of the multilevel k-way algorithm. A
 \section{Thesis Structure}
 \textbf{Chapter 2:} \textit{Background}
 \begin{quote}
-	Chapter 2 covers some of the fundamental topics in graph partitioning.  It also presents some of the algorithms used today, along with applications of graph partitioning algorithms.
+	Chapter 2 covers fundamental topics in graph partitioning.  It also presents some of the algorithms used today, along with the main application area where they are applied.	
 \end{quote}
 \textbf{Chapter 3:} \textit{Multilevel K-Way Graph Partitioning}
 \begin{quote}
-	Chapter 3 discusses the multilevel k-way graph partitioning algorithm used to develop NVOL. This approach achieves a good balance between quality and run time, making it a popular option for large graphs. In this chapter the standard version of the algorithm is presented, which uses edge-cut. This approach is simpler and easier to understand, the following chapters expand the algorithm to support volume based objectives like NVOL.  
+	Chapter 3 discusses the multilevel k-way graph partitioning algorithm on which NVOL is built. This approach achieves a good balance between quality and runtime, making it a popular choice for large graphs. The chapter presents the standard version of the algorithm, which uses edge-cut as its objective. This formulation is simpler and easier to understand; the following chapters then extend the algorithm to support volume-based objectives such as NVOL.
 \end{quote}
 \textbf{Chapter 4:} \textit{Communication Volume Calculation}
 \begin{quote}
-	Chapter 4 explains how gain can be evaluated for volume objectives.  The chapter discusses how both total communication volume and per-partition volume can be calculated. It starts with the definitions of the gain calculations followed by some examples. The final sections discuss how these calculations are implemented in the multilevel k-way algorithm.
+	Chapter 4 explains how gain can be evaluated for volume based objectives. It discusses how both total communication volume and per-partition volume are calculated, beginning with formal definitions of the gain calculations, followed by some examples. The final sections describe how these calculations are integrated into the multilevel k-way algorithm.
 \end{quote}
 \textbf{Chapter 5:} \textit{Refinement Using Communication Volume}
 \begin{quote}
-	Chapter 5 covers the refinement stage explaining how to run it using communication volume. With the knowledge from Chapter 4, we can now evaluate how we can refine the partitions for volume objectives. The chapter shows how the total communication volume objective and NVOL are used in this stage. Both sections end with a simplified algorithm representing the implementation.
+	Chapter 5 covers the refinement stage and explains how it is implemented for volume-based objectives. Building on Chapter 4, we show how the partitions can be refined using communication volume objectives. The total communication volume objective and NVOL are each treated in their own section, and both conclude with a simplified algorithm representing the implementation.
 \end{quote}
-\textbf{Chapter 6:} \textit{Results}
+\textbf{Chapter 6:} \textit{NVOL tooling support}
+\begin{quote}
+	Chapter 6 presents the tools and programs used in this thesis to run and analyze the multilevel k-way partitioning algorithm with NVOL.
+	
+	Chapter 6 presents the tools used in this thesis to run and analyze the multilevel k-way partitioning algorithm with NVOL. It introduces METIS, the partitioning framework that NVOL extends, and describes its input and output formats. It then presents a small collection of Python scripts developed alongside this work for preprocessing input graphs and analyzing the per-partition communication volumes produced by our experiments.
+\end{quote}
+\textbf{Chapter 7:} \textit{Results}
 \begin{quote}
 	...
 \end{quote}
-\textbf{Chapter 7:}
+\textbf{Chapter 8:} \textit{Future Work}
+\begin{quote}
+	...
+\end{quote}
+\textbf{Chapter 9:} \textit{Conclusions}
 \begin{quote}
 	...
 \end{quote}

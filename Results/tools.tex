@@ -1,0 +1,37 @@
+\chapter{NVOL tooling support}
+This chapter presents some tools used through this thesis that produced the results in Chapter~\ref{chap:results}.
+
+\section{METIS}
+For this thesis we used METIS as our multilevel $k$-way partitioner. The METIS framework is open source\footnote{\url{https://github.com/KarypisLab/METIS}}, developed by George Karypis, and widely used. We have also made public a version extended with NVOL\footnote{\url{https://github.com/riccardoie/METIS-with-NVOL}}. Most of the logic behind the multilevel $k$-way algorithm has already been covered in Chapters~\ref{chap:multilevel-kway}--\ref{chapter5}, so we refer the reader to those chapters.
+
+\subsection{Inputs}
+METIS requires three inputs: a graph file, the number of partitions, and the objective function. A few optional flags are also available to fine-tune the algorithm.
+
+The graph file must follow a specific structure. The first line is a header whose first two values are the number of vertices and the number of unique edges in the graph. The header may also contain two additional parameters specifying whether the graph has vertex/edge weights and whether it has multiple weights per vertex or edge. Further details can be found in the official manual\footnote{\url{https://github.com/KarypisLab/METIS/blob/master/manual/manual.pdf}}. All graphs used in this work are single-weight, with unit weights on both edges and vertices; note, however, that NVOL also supports graphs with single vertex weights.
+
+The remaining lines of the graph file describe the graph's connectivity: each line corresponds to a vertex, and its entries are the ids of the vertices it is connected to.
+
+\subsection{Output}
+Once the algorithm terminates, METIS produces a partition file. This text file contains $n$ lines, where $n$ is the number of vertices in the graph, and each line holds a single integer in the range $[0, k-1]$ indicating the partition the corresponding vertex was assigned to. The partition files are name graphName.part.$k$, where $k$ is the number of partitions. 
+
+\section{Graph Tools}
+In this section we will present a few simple tools that were developed during this thesis to display and analyze the results produced by the partitioning algorithm as well as graph formatting. The scripts can all be found in the following repository \footnote{\url{https://github.com/riccardoie/Graph-tools/tree/main}}.
+
+\subsection{calc\_partitions}
+To verify and analyze the per-partition outgoing communication volume produced by our experiments, we wrote a simple script, \texttt{calc\_partitions}, that computes it directly from the partition files. It takes two arguments: the original graph filename and the path to the folder containing the partition files. Given these inputs, \texttt{calc\_partitions} computes the outgoing partition volumes for every \texttt{.part.$k$} file associated with that graph. The results are written to a text file divided into sections, one per partition file, each introduced by a header of the form \texttt{graphName.part.$k$}. Within each section, the partitions are listed in order of partition id, from $0$ to $k-1$.
+
+The program works as follows. For every partition file of a graph, it initializes an empty array of length $k$, representing the number of partitions. It then iterates over the graph's vertices, and for each vertex compares its partition with the partition of every neighbor, storing the neighbors' partitions in a set to ensure that each external partition is counted only once per vertex. As shown in Section~\ref{Partition specific gain calculation}, the outgoing communication volume of a partition is the sum of the outgoing communication volumes of the vertices it contains. Once the graph has been fully traversed, the resulting volume array is stored in a dictionary keyed by \texttt{graphName.part.$k$}, and finally written out to the output file.
+
+\subsection{form\_statics}
+To collect the per-partition statistics produced by our experiments without recomputing them, we use the script \texttt{form\_statistics}, which processes the files produced by \texttt{calc\_partitions}. For each file, the script reads the contents line by line and parses two types of entries: lines containing \texttt{.part.}, treated as headers marking the beginning of a new partition file's section, and lines starting with \texttt{Pid}, containing the volume of the corresponding partition. The values are grouped by section in a dictionary, and for each group we compute the total outgoing communication volume, the maximum outgoing volume across partitions, the average outgoing volume, and the standard deviation. The results are written to a CSV file, one per input file.
+
+\subsection{graph\_results\_vol}
+To evaluate the distribution, we have developed a simple script that plots the partition volumes for a given partition file. The script takes three inputs: the graph file, the number of partitions, and the version identifying the partition file folder. It reads the files output by \texttt{calc\_partitions} and collects all values from the section matching the requested number of partitions. The script is also hardcoded to do the same for the corresponding METIS volumes, and the two sets of volumes are then plotted side by side.
+
+\subsection{stats\_vol}
+This script reads the files produced by \texttt{form\_statistics} and plots the results. It takes a graph file name and the version being tested as input, then compares the resulting statistics against the METIS reference values. It produces four plots: the total volume, the maximum partition volume, the percentage difference in maximum partition volume between NVOL and METIS, and the standard deviation of the partition volumes.
+
+%\subsection{model\textunderscore estimates}
+
+\subsection{translate\_to\_metis}
+All graphs used in this thesis were in Matrix Market exchange format (.mtx) and therefore needed to be translated into a format METIS could use. The .mtx format is a plain-text format for representing sparse and dense matrices, where each non-zero entry corresponds to an edge in the graph. After the comment lines (prefixed with \%) and a header, each subsequent line lists the two endpoints of an edge: for example, 1 24 denotes an edge between vertex 1 and vertex 24. Our script parses the file and stores each edge as a sorted tuple in a set, which deduplicates entries and discards self-loops. It then builds an adjacency list by iterating over the edge set, appending each vertex to each other's neighbor lists. Since Matrix Market files are 1-indexed while Python lists are 0-indexed, we offset the list indices by one while keeping the vertex ids themselves 1-indexed, as required by the METIS format. Once all edges have been processed, the adjacency list is written as a graph file.

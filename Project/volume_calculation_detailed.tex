@@ -103,7 +103,7 @@ For every adjacent boundary vertex $v$ visited, we check each of the cases above
 \section{Partition specific gain calculation} \label{Partition specific gain calculation}
 This section extends the total communication volume gain calculation from Section~\ref{METIS gain calculation}. The total gain contains no information about which partition is affected by a move, information that is required to use NVOL during refinement. Here we show how to decompose the communication volume gain into its individual contributions to each partition. Once computed, this decomposition can be used to refine the graph; how NVOL uses it is discussed in Section~\ref{sec:NVOL refinement}.
 
-In order to calculate the volume for a given partition $n$, consider a subset of boundary vertices where each vertex is part of the same partition. The communication volume associated with partition $n$ is then given by
+In order to calculate the volume for a given partition $n$, consider a subset of boundary vertices where each vertex is part of the same partition. The outgoing communication volume associated with partition $n$ is then given by
 \begin{equation} \label{partition_volume}
 	\mathrm{partition\quad volume}[n] = \sum_{v \in V_b \mid P[v] = n} \left| N_v \right| w(v)
 \end{equation}
