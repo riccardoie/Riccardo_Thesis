@@ -1,4 +1,4 @@
-\chapter{NVOL tooling support}
+\chapter{NVOL tooling support}\label{chap:NVOL tooling}
 This chapter presents some tools used through this thesis that produced the results in Chapter~\ref{chap:results}.
 
 \section{METIS}
@@ -7,7 +7,7 @@ For this thesis we used METIS as our multilevel $k$-way partitioner. The METIS f
 \subsection{Inputs}
 METIS requires three inputs: a graph file, the number of partitions, and the objective function. A few optional flags are also available to fine-tune the algorithm.
 
-The graph file must follow a specific structure. The first line is a header whose first two values are the number of vertices and the number of unique edges in the graph. The header may also contain two additional parameters specifying whether the graph has vertex/edge weights and whether it has multiple weights per vertex or edge. Further details can be found in the official manual\footnote{\url{https://github.com/KarypisLab/METIS/blob/master/manual/manual.pdf}}. All graphs used in this work are single-weight, with unit weights on both edges and vertices; note, however, that NVOL also supports graphs with single vertex weights.
+The graph file must follow a specific structure. The first line is a header whose first two values are the number of vertices and the number of unique edges in the graph. The header may also contain two additional parameters specifying whether the graph has vertex/edge weights and whether it has multiple weights per vertex or edge. Further details can be found in the official manual\footnote{\url{https://github.com/KarypisLab/METIS/blob/master/manual/manual.pdf}}. All graphs used in this work are single-weight, with unit weights on both edges and vertices, a list of them can be found in~\ref{tab:graph_table}. Note, however, that NVOL also supports graphs with single vertex weights.
 
 The remaining lines of the graph file describe the graph's connectivity: each line corresponds to a vertex, and its entries are the ids of the vertices it is connected to.
 
@@ -31,7 +31,18 @@ To evaluate the distribution, we have developed a simple script that plots the p
 \subsection{stats\_vol}
 This script reads the files produced by \texttt{form\_statistics} and plots the results. It takes a graph file name and the version being tested as input, then compares the resulting statistics against the METIS reference values. It produces four plots: the total volume, the maximum partition volume, the percentage difference in maximum partition volume between NVOL and METIS, and the standard deviation of the partition volumes.
 
-%\subsection{model\textunderscore estimates}
-
 \subsection{translate\_to\_metis}
 All graphs used in this thesis were in Matrix Market exchange format (.mtx) and therefore needed to be translated into a format METIS could use. The .mtx format is a plain-text format for representing sparse and dense matrices, where each non-zero entry corresponds to an edge in the graph. After the comment lines (prefixed with \%) and a header, each subsequent line lists the two endpoints of an edge: for example, 1 24 denotes an edge between vertex 1 and vertex 24. Our script parses the file and stores each edge as a sorted tuple in a set, which deduplicates entries and discards self-loops. It then builds an adjacency list by iterating over the edge set, appending each vertex to each other's neighbor lists. Since Matrix Market files are 1-indexed while Python lists are 0-indexed, we offset the list indices by one while keeping the vertex ids themselves 1-indexed, as required by the METIS format. Once all edges have been processed, the adjacency list is written as a graph file.
+
+\subsection{model\_estimates}
+To further evaluate the quality of our partitions we also implemented one the models presented in ~\cite{Xing_of_Heterogeneous}. The models displayed in the paper model the per-process time of running a communicating task, taking into account the bandwith contention caused by message passing interface processes (MPI) competing with each other. In this thesis we use the models for MPI processes with different number of neighbors and non-uniform message sizes, more specifically formulas 7-9.
+
+Our script takes in four arguments: graph, version of NVOL, number of partitions and startup latency. Additionally we have hardcoded a bandwidth array, however this can be set as an argument as well in order to adapt the model to other setups. The script will then start by calculating the incoming message per partition. Using the incoming message we can calculate the expected time to run the graph as a function of the incoming volume, bandwidth and latency of the setup. 
+
+Until now we have only looked at the outgoing communication volume, meaning we need to expand our definitions to support incoming communication volume. If the outgoing communication volume represents the data a partition sends to its neighbors, the incoming communication volume is the data a partition receives from its neighbors. Using the definitions from Chapter~\ref{cv_calculation}, we can express the incoming communication volume for a partition $n$ as:
+\begin{equation}
+	\mathrm{incoming\quad volume}[n] = \sum_{v \in V_b \mid n \in N_v} w(v),
+\end{equation}
+where $V_b$ is a set of boundary vertices and $N_v$ represents the set of neighboring partitions of vertex $v$, excluding its own $P[v] \notin N_v$. The sum of all the vertices connected to $n$ equals then to the incoming message of a partition. 
+
+Once the communication volume is computed we can calculate formulas 7-9.

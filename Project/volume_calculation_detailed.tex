@@ -40,13 +40,13 @@ For each boundary vertex $v \in V_b$, let $N_v$ denote the set of distinct parti
 	\begin{minipage}[b]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/node_volume_2}
-		\caption{Vertex $A$ has a communication volume of 2. Each color represents a partition.}
+		\caption{Vertex $A$ has an outgoing communication volume of 2. Each color represents a partition.}
 		\label{1}
 	\end{minipage}\qquad
 	\begin{minipage}[b]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/node_volume_1}
-		\caption{Vertex $A$ has a communication volume of 1. Each color represents a partition.}
+		\caption{Vertex $A$ has an outgoing communication volume of 1. Each color represents a partition.}
 		\label{2}
 	\end{minipage}
 \end{figure}
@@ -150,13 +150,13 @@ Consider the graph in Figure~\ref{3}, consisting of five vertices with unit weig
 	\begin{minipage}[t]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/same_partition_example}
-		\caption{Graph with a volume of 4, each partition has a volume of 2.}
+		\caption{Partitioned graph with a volume of 4, each partition has an outgoing volume of 2.}
 		\label{3}
 	\end{minipage}\qquad
 	\begin{minipage}[t]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/same_partition_example_moved}
-		\caption{Graph with a volume of 4, each partition has a volume of 2 after the move.}
+		\caption{Partitinoed graph with a volume of 4, each partition has an outgoing volume of 2 after the move.}
 		\label{4}
 	\end{minipage}
 \end{figure}
@@ -201,7 +201,7 @@ We now extend the example to three partitions. Consider the graph in Figure~\ref
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=.35\linewidth]{pictures/three_partition_one_each}
-	\caption{Graph with a total communication volume of 8.}
+	\caption{Partitioned graph with a total communication volume of 8.}
 	\label{three_partition_one_each}
 \end{figure}
 Let \textit{B} be the candidate vertex with neighbors $\{A,C,D,E\}$. Unlike the previous example, \textit{B} may move to either the blue or green partition. Thus, $G_B$ has size 3 and $SG_B$ $3\times 2$.
@@ -288,13 +288,13 @@ Each column corresponds to a destination partition, and each row describes how a
 	\begin{minipage}[t]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/three_partition_one_each_moved_blue}
-		\caption{Graph has a volume of 6 after \textit{B} is moved to the blue partition}
+		\caption{Partitioned graph has a volume of 6 after \textit{B} is moved to the blue partition}
 		\label{three_partition_one_each_moved_blue}
 	\end{minipage} \qquad
 	\begin{minipage}[t]{.4\textwidth}
 		\centering
 		\includegraphics[width=.7\linewidth]{pictures/three_partition_one_each_moved_green}
-		\caption{Graph has a volume of 8 after \textit{B} is moved to the green partition}
+		\caption{Partitioned graph has a volume of 8 after \textit{B} is moved to the green partition}
 		\label{three_partition_one_each_moved_green}
 	\end{minipage}
 \end{figure}
@@ -304,7 +304,7 @@ None of the preceding examples illustrate a scenario in which Case 4 is relevant
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=.35\linewidth]{pictures/case4_example}
-	\caption{Graph with a total communication volume of 8.}
+	\caption{Partitioned graph with a total communication volume of 8.}
 	\label{case4_example}
 \end{figure}
 
@@ -359,13 +359,13 @@ Figures~\ref{case4_example_moved_blue} and~\ref{case4_example_moved_green} show 
 	\begin{minipage}[t]{.4\textwidth}
 			\centering
 			\includegraphics[width=.7\linewidth]{pictures/case4_example_moved_blue}
-			\caption{Graph has a volume of 5 after the move.}
+			\caption{Partitioned graph has a volume of 5 after the move.}
 			\label{case4_example_moved_blue}
 		\end{minipage}\qquad
 	\begin{minipage}[t]{.4\textwidth}
 			\centering
 			\includegraphics[width=.7\linewidth]{pictures/case4_example_moved_green}
-			\caption{Graph has a volume of 6 after the move.}
+			\caption{Partitioned graph has a volume of 6 after the move.}
 			\label{case4_example_moved_green}
 		\end{minipage}
 \end{figure}

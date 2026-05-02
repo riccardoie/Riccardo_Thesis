@@ -1,0 +1,17 @@
+\chapter{Future Work} \label{chap_future_work}
+This chapter outlines areas where the work in this thesis could be improved, along with related projects that would extend it.
+
+%something something%
+
+\section{Improved efficiency}
+One of METIS's main strengths is its partitioning speed, and the additional structures and operations introduced by NVOL inevitably affect this, particularly on larger graphs. For small graphs the partitioning time is essentially unchanged, but on larger ones NVOL was observed to be significantly slower than METIS running with the total communication volume objective.
+
+The overhead has a straightforward explanation: NVOL adds code to METIS's refinement stage and increases the number of iterations performed there. METIS itself is carefully designed to avoid redundant work, most of the volume operations are performed during graph projection. This way the refinement stage can reuse it rather than reiterating over the graph. NVOL breaks this pattern by recomputing the gain information for each vertex it visits during refinement, effectively repeating work that METIS already performs at projection time.
+
+Three considerations led us not to integrate NVOL's gain calculation directly into the projection stage. First, NVOL has a larger memory footprint than total communication volume. As described in Chapter~\ref{cv_calculation}, total communication volume requires a vector whose length equals the number of partitions a vertex neighbors, whereas NVOL requires a table. For a vertex with a gain vector of length $k$, the corresponding gain table has dimensions $(k+1)\times k$, so a gain vector of length 5 already implies a $6 \times 5$ table per vertex. Second, METIS uses incremental updates between moves to keep the volume gains of affected vertices current; implementing the equivalent logic for NVOL was outside the scope of this thesis. Third, and perhaps most decisive, time constraints during development, combined with the considerable effort required to address the first two points, prevented us from pursuing this integration further. 
+
+This decision was nonetheless preceded by an attempt at the integration. Our strategy allocated the exact memory needed for each gain table and deallocated it once the corresponding vertex left the boundary; gain updates were handled by simply recomputing all neighbors of the moved vertex. In principle this is much closer to what METIS does and should have improved performance. In practice, however, the algorithm became even slower than the original NVOL implementation, with the frequent allocation and deallocation of memory as the dominant cost. A better solution would be to allocate a single block of memory at projection time, sized from an estimate of how many boundary vertices the finer graph will contain, with additional logic to extend the block when the estimate falls short and to release it once refinement completes. Combined with proper incremental updates of neighboring vertices' gains after each move, this would allow NVOL to partition in a time frame close to METIS, at the cost of higher memory use.
+ 
+\section{Introduce hardware knowledge}
+
+\section{More testing}
