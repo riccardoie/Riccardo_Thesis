@@ -85,10 +85,9 @@ Using the graphs listed above, we ran METIS with two objectives: NVOL and the st
 \texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. The number of partitions used for each graph depended on the
 graph's size. To avoid splitting a graph into too many pieces, we required the square of the partition count to be at most equal to the number of vertices in the graph.
 
- 
+The following tables compare the maximum outgoing partition volume between METIS and NVOL. Using METIS as the baseline, we report each value as the percentage difference of NVOL relative to METIS. Cells are color-coded for readability: green indicates that NVOL achieves a lower maximum (better), while red indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions.
 
-
-if NVOL is able to improve upon METIS's maximum per-partition outgoing volume for the Heart dataset. Each graph was partitioned at several different partition counts, and for each we recorded the outgoing volume of the resulting partitions. The values shown are the percentage difference between METIS's maximum outgoing volume in a single partition and NVOL's. A positive percentage shows how much smaller maximum outgoing volume NVOL was able to produce, while a negative percentage represents how much greater it is than METIS.
+Table~\ref{tab:heart_NVOLvsMETIS} shows the results from the Heart dataset. The first thing one notices is how NVOL is able to improve the maximum outgoing communication volume on all runs apart from 4 runs. Most of the time the improvement is between 3-5\% with a few peaks at 10\% and above. Like it was probably clear already from table~\ref{tab:heart_dataset}, these graphs are very similar in structure something that seems to translate in the partitions as well. 
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
@@ -214,56 +213,6 @@ if NVOL is able to improve upon METIS's maximum per-partition outgoing volume fo
 	\caption{Percentage difference between NVOL and METIS's max outgoing volume in a partition (128--2048 partitions)}
 	\label{tab:suitesparse_METISvsNVOL_high}
 \end{table}
-%\begin{table}[h]
-%	\centering
-%	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
-%		\hline
-%		\textbf{Graphs} & \multicolumn{1}{c|}{2}
-%		& \multicolumn{1}{c|}{4}
-%		& \multicolumn{1}{c|}{8}
-%		& \multicolumn{1}{c|}{16}
-%		& \multicolumn{1}{c|}{32}
-%		& \multicolumn{1}{c|}{64}
-%		& \multicolumn{1}{c|}{128}
-%		& \multicolumn{1}{c|}{256}
-%		& \multicolumn{1}{c|}{512}
-%		& \multicolumn{1}{c|}{1024}
-%		& \multicolumn{1}{c|}{2048} \\
-%		\hline
-%		fe\_tooth & -1.47 & 9.83 & 13.98 & 7.26 & 19.91 & 6.92 & 12.72 & 11.92 & N/A & N/A & N/A\\
-%		\hline
-%		citationCiteseer & 11.87 & -1.89 & -6.89 & -13.92 & -11.59 & -4.83 & 13.18 & 32.82 & 55.08 & N/A & N/A\\
-%		\hline
-%		pa2010 & -5.02 & 6.69 & 10.11 & 3.08 & 12.54 & 11.03 & 15.92 & 9.46 & 16.03 & N/A & N/A\\
-%		\hline
-%		coPapersDBLP & -32.09 & -17.81 & -8.82 & 1.78 & 0.41 & 24.10 & 40.37 & 48.44 & 56.70 & N/A & N/A\\
-%		\hline
-%		roadNet-CA & 3.80 & 1.79 & -5.00 & -0.79 & -5.51 & -2.42 & 9.13 & -1.11 & 9.35 & 14.63 & N/A\\
-%		\hline
-%		channel-500x100x100-b050 & 10.67 & 8.79 & 10.32 & 9.83 & 9.92 & 13.69 & 11.57 & 9.82 & 8.54 & 9.72 & \\
-%		\hline
-%		hugetric-00000 & 9.02 & 12.71 & 12.24 & 14.62 & 12.94 & 7.63 & 16.01 & 18.53 & 1.76 & 16.23 & \\
-%		\hline
-%		italy\_osm & 0.00 & -1.02 & 0.90 & -1.09 & 8.87 & 4.00 & 3.85 & -0.94 & -21.21 & -6.82 & \\
-%		\hline
-%		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 & 14.48 & 10.97 & 13.83 & 10.95 & \\
-%		\hline
-%		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 & -0.64 & 8.16 & 18.60 & 7.30 & \\
-%		\hline
-%		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 & 11.12 & 10.38 & 13.29 & 12.95 & \\
-%		\hline
-%		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 & 4.85 & 7.98 & 5.01 & 2.93 & \\
-%		\hline
-%		europe\_osm & -0.41 & 0.27 & -0.73 & -3.66 & -3.75 & -2.54 & 4.82 & -8.14 & 0.62 & -7.33 & \\
-%		\hline
-%		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 & -4.49 & 7.94 & 18.98 & 18.00 & \\
-%		\hline
-%		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 & 28.85 & 46.34 & 34.06 & 37.64 & \\
-%		\hline
-%	\end{tabular}
-%	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
-%	\label{tab:suitesparse_METISvsNVOL}
-%\end{table}
 %Explain how things are evaluated
 %Look at results
 %	max partition vol in different graphs
