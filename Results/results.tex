@@ -1,17 +1,278 @@
 \chapter{Results}\label{chap:results}
-This chapter presents the results of running METIS with NVOL. Throughout this chapter we will compare these results to METIS own total communication volume objective (as well as other partitioners?). To generate the graphs and plots in this chapter the tools described in Chapter~\ref{chap:NVOL tooling} were used. These results show the impact of applying a partition-aware objective function and compare whether this leads to any improvements in the resulting partitioning. 
+This chapter presents the results of running METIS with NVOL. Throughout this chapter we will compare these results to METIS own total communication volume objective. To generate the graphs and plots in this chapter the tools described in Chapter~\ref{chap:NVOL tooling} were used. These results show the impact of applying a partition-aware objective function and compare whether this leads to any improvements in the resulting partitioning. 
+
+\section{Graphs used for testing}
+To evaluate NVOL we used symmetric matrices drawn from two datasets, treating each matrix as the adjacency representation of an undirected graph. Symmetry is required because the GPP, as defined in Section~\ref{sec:gpp}, is formulated on undirected graphs. The two datasets were chosen to cover a wide range of graph
+sizes and to include instances arising from different application domains. We tried to prioritize graphs with a higher average degree as well. 
+
+The first dataset is taken from \textit{Repository for modelling acute myocardial ischemia: simulation scripts and torso-heart mesh}~\cite{martinez-navarro2019a}, who simulate acute myocardial ischemia in a human heart using
+the Chaste finite-element framework. The resulting meshes were then translated into a format accepted by METIS. Table~\ref{tab:heart_dataset} summarises the seven instances, ranging from roughly $10^3$ to almost $10^7$ vertices. 
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|r|r|r|r|r|}
+		\hline
+		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max degree} & \textbf{Min degree} & \textbf{Std. dev.}\\
+		\hline
+		heart01 & 1,394 & 6,946 & 21 & 5 & 2.1\\
+		\hline
+		heart02 & 45,384 & 275,661 & 24 & 5 & 3.4\\
+		\hline
+		heart03 & 296,774 & 1,948,530 & 25 & 5 & 3.1\\
+		\hline
+		heart04 & 555,433 & 3,715,278 & 26 & 5 & 3.0\\
+		\hline
+		heart05 & 1,257,588 &  8,574,893 & 25 & 5 & 2.8\\
+		\hline
+		heart06 & 4,041,680 &  28,138,550 & 25 & 5 & 2.6\\
+		\hline
+		heart07 & 9,349,543 & 65,800,809 & 26 & 4 & 2.6\\
+		\hline
+	\end{tabular}
+	\caption{Heart dataset~\cite{martinez-navarro2019a}}
+	\label{tab:heart_dataset}
+\end{table}
+
+The second data set was retrieved from \textit{The Suite Sparse Matrix Collection}~\cite{suitesparse}. This collection contains a large variety of matrices and keeps growing. We chose a subset of matrices that were symmetric with different amounts of vertices. In order to test NVOL on different setups we also chose graphs with varying average edge per vertex. Table~\ref{tab:suitesparse} summarises the **** matrices.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|r|r|r|r|r|}
+		\hline
+		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max degree} & \textbf{Min degree} & \textbf{Std. dev.}\\
+		\hline
+		fe\_tooth & 78,136 & 452,591 & 39 & 3 & 5\\
+		\hline
+		citationCiteseer & 268,495 & 1,156,647 & 1318 & 1 & 16.3\\
+		\hline
+		pa2010 & 421,545 & 1,029,231 & 64 & 1 & 2.6\\
+		\hline
+		kron\_g500-logn19 & 524,288 & 21,780,787 & 80674 & \textbf{0} & 540.9\\
+		\hline
+		coPapersDBLP & 540,486 & 15,245,729 & 3299 & 1 & 66.2\\
+		\hline
+		hollywood-2009 & 1,139,905 & 56,375,711 & 11467 & \textbf{0} & 271.9\\
+		\hline
+		roadNet-CA & 1,971,281 & 2,766,607 & 12 & \textbf{0} & 1.0\\
+		\hline
+		channel-500x100x100-b050 & 4,802,000 & 42,681,372 & 18 & 6 & 1.0\\
+		\hline
+		hugetric-00000 & 5,824,554 & 8,733,523 & 3 & 2 & 0.03\\
+		\hline
+		italy\_osm & 6,686,493 & 7,013,978 & 9 & 1 & 0.4\\
+		\hline
+		hugetric-00020 & 7,122,792 & 10,680,777 & 3 & 2 & 0.03\\
+		\hline
+		rgg\_n\_2\_23\_s0 & 8,388,608 & 63,501,393 & 40 & \textbf{0} & 3.9\\
+		\hline
+		hugetrace-00020 & 16,002,413 & 23,998,813 & 3 & 2 & 0.02\\
+		\hline
+		delaunay\_n24 & 16,777,216 & 50,331,601 & 26 & 3 & 1.3\\
+		\hline
+		europe\_osm & 50,912,018 & 54,054,660 & 13 & 1 & 0.5\\
+		\hline
+		kmer\_V2a & 55,042,369 & 58,608,800 & 39 & 1 & 0.7\\
+		\hline
+		kmer\_U1a & 67,716,231 & 69,389,281 & 35 & 1 & 0.4\\
+		\hline
+	\end{tabular}
+	\caption{Suite Sparse Matrix Collection~\cite{suitesparse}}
+	\label{tab:suitesparse}
+\end{table}
+
+\section{Maximum outgoing volume per-partition}
+Using the graphs listed above, we ran METIS with two objectives: NVOL and the standard total communication volume. For each run we then used
+\texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. The number of partitions used for each graph depended on the
+graph's size. To avoid splitting a graph into too many pieces, we required the square of the partition count to be at most equal to the number of vertices in the graph.
+
+ 
 
 
+if NVOL is able to improve upon METIS's maximum per-partition outgoing volume for the Heart dataset. Each graph was partitioned at several different partition counts, and for each we recorded the outgoing volume of the resulting partitions. The values shown are the percentage difference between METIS's maximum outgoing volume in a single partition and NVOL's. A positive percentage shows how much smaller maximum outgoing volume NVOL was able to produce, while a negative percentage represents how much greater it is than METIS.
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
+		\hline
+		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+			& \multicolumn{1}{c|}{4}
+			& \multicolumn{1}{c|}{8}
+			& \multicolumn{1}{c|}{16}
+			& \multicolumn{1}{c|}{32}
+			& \multicolumn{1}{c|}{64}
+			& \multicolumn{1}{c|}{128}
+			& \multicolumn{1}{c|}{256}
+			& \multicolumn{1}{c|}{512}
+			& \multicolumn{1}{c|}{1024}
+			& \multicolumn{1}{c|}{2048} \\
+		\hline
+		heart01 & -1.30 & 1.04 & 14.4 & 6.49 & 0 & N/A & N/A & N/A & N/A & N/A & N/A\\
+		\hline
+		heart02 & 0.79 & 5.93 & 6.82 & 3.38 & 10.44 & 10.38 & 17.57 & N/A & N/A & N/A & N/A\\
+		\hline
+		heart03 & 1.78 & 3.85 & 3.21 & 2.91 & 8.42 & 7.08 & 9.47 & 8.96 & 5.34 & N/A & N/A\\
+		\hline
+		heart04 & -0.18 & 4.82 & 3.39 & 2.68 & 4.49 & 4.55 & 2.17 & 5.71 & 6.08 & N/A & N/A\\
+		\hline
+		heart05 & 0.42 & 1.78 & 3.61 & 5.66 & 5.23 & 6.27 & 9.69 & 1.68 & -1.16 & 6.91 & N/A\\
+		\hline
+		heart06 & 0.03 & 2.01 & 2.20 & 2.43 & 5.83 & 4.70 & 5.47 & 9.65 & 4.26 & 8.83 & N/A\\
+		\hline
+		heart07 & -0.10 & 1.58 & 2.72 & 3.56 & 5.85 & 5.26 & 4.92 & 4.59 & 7.90 & 3.53 & 2.75\\
+		\hline
+	\end{tabular}
+	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
+	\label{tab:heart_NVOLvsMETIS}
+\end{table}
 
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|P|P|P|P|P|P|}
+		\hline
+		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+		& \multicolumn{1}{c|}{4}
+		& \multicolumn{1}{c|}{8}
+		& \multicolumn{1}{c|}{16}
+		& \multicolumn{1}{c|}{32}
+		& \multicolumn{1}{c|}{64} \\
+		\hline
+		fe\_tooth & -1.47 & 9.83 & 13.98 & 7.26 & 19.91 & 6.92 \\
+		\hline
+		citationCiteseer & 11.87 & -1.89 & -6.89 & -13.92 & -11.59 & -4.83 \\
+		\hline
+		pa2010 & -5.02 & 6.69 & 10.11 & 3.08 & 12.54 & 11.03 \\
+		\hline
+		coPapersDBLP & -32.09 & -17.81 & -8.82 & 1.78 & 0.41 & 24.10 \\
+		\hline
+		roadNet-CA & 3.80 & 1.79 & -5.00 & -0.79 & -5.51 & -2.42 \\
+		\hline
+		channel-500x100x100-b050 & 10.67 & 8.79 & 10.32 & 9.83 & 9.92 & 13.69 \\
+		\hline
+		hugetric-00000 & 9.02 & 12.71 & 12.24 & 14.62 & 12.94 & 7.63 \\
+		\hline
+		italy\_osm & 0.00 & -1.02 & 0.90 & -1.09 & 8.87 & 4.00 \\
+		\hline
+		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 \\
+		\hline
+		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 \\
+		\hline
+		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 \\
+		\hline
+		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 \\
+		\hline
+		europe\_osm & -0.41 & 0.27 & -0.73 & -3.66 & -3.75 & -2.54 \\
+		\hline
+		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 \\
+		\hline
+		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 \\
+		\hline
+	\end{tabular}
+	\caption{Percentage difference between NVOL and METIS's max outgoing volume in a partition (2--64 partitions)}
+	\label{tab:suitesparse_METISvsNVOL_low}
+\end{table}
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|P|P|P|P|P|}
+		\hline
+		\textbf{Graphs} & \multicolumn{1}{c|}{128}
+		& \multicolumn{1}{c|}{256}
+		& \multicolumn{1}{c|}{512}
+		& \multicolumn{1}{c|}{1024}
+		& \multicolumn{1}{c|}{2048} \\
+		\hline
+		fe\_tooth & 12.72 & 11.92 & N/A & N/A & N/A \\
+		\hline
+		citationCiteseer & 13.18 & 32.82 & 55.08 & N/A & N/A \\
+		\hline
+		pa2010 & 15.92 & 9.46 & 16.03 & N/A & N/A \\
+		\hline
+		coPapersDBLP & 40.37 & 48.44 & 56.70 & N/A & N/A \\
+		\hline
+		roadNet-CA & 9.13 & -1.11 & 9.35 & 14.63 & N/A \\
+		\hline
+		channel-500x100x100-b050 & 11.57 & 9.82 & 8.54 & 9.72 & N/A \\
+		\hline
+		hugetric-00000 & 16.01 & 18.53 & 1.76 & 16.23 & N/A \\
+		\hline
+		italy\_osm & 3.85 & -0.94 & -21.21 & -6.82 & N/A \\
+		\hline
+		hugetric-00020 & 14.48 & 10.97 & 13.83 & 10.95 & N/A \\
+		\hline
+		rgg\_n\_2\_23\_s0 & -0.64 & 8.16 & 18.60 & 7.30 & N/A \\
+		\hline
+		hugetrace-00020 & 11.12 & 10.38 & 13.29 & 12.95 & N/A \\
+		\hline
+		delaunay\_n24 & 4.85 & 7.98 & 5.01 & 2.93 & N/A \\
+		\hline
+		europe\_osm & 4.82 & -8.14 & 0.62 & -7.33 & N/A \\
+		\hline
+		kmer\_V2a & -4.49 & 7.94 & 18.98 & 18.00 & N/A \\
+		\hline
+		kmer\_U1a & 28.85 & 46.34 & 34.06 & 37.64 & N/A \\
+		\hline
+	\end{tabular}
+	\caption{Percentage difference between NVOL and METIS's max outgoing volume in a partition (128--2048 partitions)}
+	\label{tab:suitesparse_METISvsNVOL_high}
+\end{table}
+%\begin{table}[h]
+%	\centering
+%	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
+%		\hline
+%		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+%		& \multicolumn{1}{c|}{4}
+%		& \multicolumn{1}{c|}{8}
+%		& \multicolumn{1}{c|}{16}
+%		& \multicolumn{1}{c|}{32}
+%		& \multicolumn{1}{c|}{64}
+%		& \multicolumn{1}{c|}{128}
+%		& \multicolumn{1}{c|}{256}
+%		& \multicolumn{1}{c|}{512}
+%		& \multicolumn{1}{c|}{1024}
+%		& \multicolumn{1}{c|}{2048} \\
+%		\hline
+%		fe\_tooth & -1.47 & 9.83 & 13.98 & 7.26 & 19.91 & 6.92 & 12.72 & 11.92 & N/A & N/A & N/A\\
+%		\hline
+%		citationCiteseer & 11.87 & -1.89 & -6.89 & -13.92 & -11.59 & -4.83 & 13.18 & 32.82 & 55.08 & N/A & N/A\\
+%		\hline
+%		pa2010 & -5.02 & 6.69 & 10.11 & 3.08 & 12.54 & 11.03 & 15.92 & 9.46 & 16.03 & N/A & N/A\\
+%		\hline
+%		coPapersDBLP & -32.09 & -17.81 & -8.82 & 1.78 & 0.41 & 24.10 & 40.37 & 48.44 & 56.70 & N/A & N/A\\
+%		\hline
+%		roadNet-CA & 3.80 & 1.79 & -5.00 & -0.79 & -5.51 & -2.42 & 9.13 & -1.11 & 9.35 & 14.63 & N/A\\
+%		\hline
+%		channel-500x100x100-b050 & 10.67 & 8.79 & 10.32 & 9.83 & 9.92 & 13.69 & 11.57 & 9.82 & 8.54 & 9.72 & \\
+%		\hline
+%		hugetric-00000 & 9.02 & 12.71 & 12.24 & 14.62 & 12.94 & 7.63 & 16.01 & 18.53 & 1.76 & 16.23 & \\
+%		\hline
+%		italy\_osm & 0.00 & -1.02 & 0.90 & -1.09 & 8.87 & 4.00 & 3.85 & -0.94 & -21.21 & -6.82 & \\
+%		\hline
+%		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 & 14.48 & 10.97 & 13.83 & 10.95 & \\
+%		\hline
+%		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 & -0.64 & 8.16 & 18.60 & 7.30 & \\
+%		\hline
+%		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 & 11.12 & 10.38 & 13.29 & 12.95 & \\
+%		\hline
+%		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 & 4.85 & 7.98 & 5.01 & 2.93 & \\
+%		\hline
+%		europe\_osm & -0.41 & 0.27 & -0.73 & -3.66 & -3.75 & -2.54 & 4.82 & -8.14 & 0.62 & -7.33 & \\
+%		\hline
+%		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 & -4.49 & 7.94 & 18.98 & 18.00 & \\
+%		\hline
+%		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 & 28.85 & 46.34 & 34.06 & 37.64 & \\
+%		\hline
+%	\end{tabular}
+%	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
+%	\label{tab:suitesparse_METISvsNVOL}
+%\end{table}
 %Explain how things are evaluated
 %Look at results
 %	max partition vol in different graphs
 %	distribution of volume between partitions
 %	mpi using Xings model
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\linewidth]{pictures/kmerU1a_32_vols}
-%	\caption{The total communication volume is 8.}
-%	\label{tot_vol_example}
-\end{figure}
+
+%presentere utgående volum først 
+% vinner NVOL? hvor mye, Taper NVOL? hvorfor? hvor mye? Er fordeling bra? std avvik
+
+%nevne innkomende volum, metis velger det bort, pga av underlying metis structure harder to implement incoming volum 
+%mention here with plots that NVOL does not improve incoming volume 

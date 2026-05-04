@@ -14,8 +14,34 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{tikz, pgf}
-\usetikzlibrary{decorations.pathmorphing, arrows.meta, calc, positioning, backgrounds, shapes, fit}
+\usepackage{array}
+\usepackage{collcell}
+\usepackage{xfp}        % provides \fpeval
+\usepackage{xstring}    % provides \IfStrEq for the N/A check
+\usepackage[table]{xcolor}
+\definecolor{winbg}{HTML}{A5D6A7}   % clear green
+\definecolor{lossbg}{HTML}{EF9A9A}  % clear red/pink
 
+\newcommand{\auto}[1]{%
+	\IfStrEq{#1}{N/A}{#1}{%
+		\edef\a{\fpeval{abs(#1)}}%
+		\ifnum\fpeval{(#1)<0}=1
+		\ifnum\fpeval{\a>20}=1 \cellcolor{red!85}%
+		\else\ifnum\fpeval{\a>5}=1 \cellcolor{red!65}%
+		\else \cellcolor{red!45}\fi\fi
+		#1%
+		\else
+		\ifnum\fpeval{\a>20}=1 \cellcolor{green!85}%
+		\else\ifnum\fpeval{\a>10}=1 \cellcolor{green!65}%
+		\else \cellcolor{green!45}\fi\fi
+		\textbf{#1}%
+		\fi
+	}%
+}
+\newcolumntype{P}{>{\collectcell\auto}r<{\endcollectcell}}
+
+
+\usetikzlibrary{decorations.pathmorphing, arrows.meta, calc, positioning, backgrounds, shapes, fit}
 \newcounter{subproject}
 \renewcommand{\thesubproject}{\alph{subproject}}
 \newenvironment{subproj}{
