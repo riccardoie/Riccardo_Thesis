@@ -10,89 +10,85 @@ the Chaste finite-element framework. The resulting meshes were then translated i
 
 \begin{table}[h]
 	\centering
-	\begin{tabular}{|l|r|r|r|r|r|}
+	\begin{tabular}{|l|r|r|r|r|r|r|}
 		\hline
-		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max degree} & \textbf{Min degree} & \textbf{Std. dev.}\\
+		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max degree} & \textbf{Min degree} & \textbf{Avg. degree} & \textbf{Std. dev.}\\
 		\hline
-		heart01 & 1,394 & 6,946 & 21 & 5 & 2.1\\
+		heart01 & 1,394 & 6,946 & 21 & 5 & 10 & 2.1\\
 		\hline
-		heart02 & 45,384 & 275,661 & 24 & 5 & 3.4\\
+		heart02 & 45,384 & 275,661 & 24 & 5 & 12 & 3.4\\
 		\hline
-		heart03 & 296,774 & 1,948,530 & 25 & 5 & 3.1\\
+		heart03 & 296,774 & 1,948,530 & 25 & 5 & 13 & 3.1\\
 		\hline
-		heart04 & 555,433 & 3,715,278 & 26 & 5 & 3.0\\
+		heart04 & 555,433 & 3,715,278 & 26 & 5 & 13 & 3.0\\
 		\hline
-		heart05 & 1,257,588 &  8,574,893 & 25 & 5 & 2.8\\
+		heart05 & 1,257,588 &  8,574,893 & 25 & 5 & 14 & 2.8\\
 		\hline
-		heart06 & 4,041,680 &  28,138,550 & 25 & 5 & 2.6\\
+		heart06 & 4,041,680 &  28,138,550 & 25 & 5 & 14 & 2.6\\
 		\hline
-		heart07 & 9,349,543 & 65,800,809 & 26 & 4 & 2.6\\
+		heart07 & 9,349,543 & 65,800,809 & 26 & 4 & 14 & 2.6\\
 		\hline
 	\end{tabular}
 	\caption{Heart dataset~\cite{martinez-navarro2019a}}
 	\label{tab:heart_dataset}
 \end{table}
 
-The second data set was retrieved from \textit{The Suite Sparse Matrix Collection}~\cite{suitesparse}. This collection contains a large variety of matrices and keeps growing. We chose a subset of matrices that were symmetric with different amounts of vertices. In order to test NVOL on different setups we also chose graphs with varying average edge per vertex. Table~\ref{tab:suitesparse} summarises the **** matrices.
+The second data set was retrieved from \textit{The Suite Sparse Matrix Collection}~\cite{suitesparse}. This collection contains a large variety of matrices and keeps growing. We chose a subset of matrices that were symmetric with different amounts of vertices and with varying average degree. Table~\ref{tab:suitesparse} summarises the 13 matrices we chose ordered by vertex number.
 
 \begin{table}[h]
-	\centering
-	\begin{tabular}{|l|r|r|r|r|r|}
+%\begin{sidewaystable}
+    \centering
+	\small
+	\setlength{\tabcolsep}{3pt}
+	\begin{tabular}{|l|r|r|r|r|r|r|}
 		\hline
-		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max degree} & \textbf{Min degree} & \textbf{Std. dev.}\\
+		\textbf{Graphs} & \textbf{Vertices} & \textbf{Edges} & \textbf{Max deg} & \textbf{Min deg} & \textbf{Avg. deg} & \textbf{Std. dev.}\\
 		\hline
-		fe\_tooth & 78,136 & 452,591 & 39 & 3 & 5\\
+		pa2010 & 421,545 & 1,029,231 & 64 & 1 & 4 & 2.6\\
 		\hline
-		citationCiteseer & 268,495 & 1,156,647 & 1318 & 1 & 16.3\\
+		coPapersDBLP & 540,486 & 15,245,729 & 3299 & 1 & 56 & 66.2\\
 		\hline
-		pa2010 & 421,545 & 1,029,231 & 64 & 1 & 2.6\\
+		\makecell[l]{packing-500x100x100\\-b050} & 2,145,852 & 17,488,243 & 18 & 0 & 16 & 2.8\\
 		\hline
-		kron\_g500-logn19 & 524,288 & 21,780,787 & 80674 & \textbf{0} & 540.9\\
+		\makecell[l]{channel-500x100x100\\-b050} & 4,802,000 & 42,681,372 & 18 & 6 & 18 & 1.0\\
 		\hline
-		coPapersDBLP & 540,486 & 15,245,729 & 3299 & 1 & 66.2\\
+		hugetric-00000 & 5,824,554 & 8,733,523 & 3 & 2 & 3 & 0.03\\
 		\hline
-		hollywood-2009 & 1,139,905 & 56,375,711 & 11467 & \textbf{0} & 271.9\\
+		italy\_osm & 6,686,493 & 7,013,978 & 9 & 1 & 2 & 0.4\\
 		\hline
-		roadNet-CA & 1,971,281 & 2,766,607 & 12 & \textbf{0} & 1.0\\
+		hugetric-00020 & 7,122,792 & 10,680,777 & 3 & 2 & 3 & 0.03\\
 		\hline
-		channel-500x100x100-b050 & 4,802,000 & 42,681,372 & 18 & 6 & 1.0\\
+		rgg\_n\_2\_23\_s0 & 8,388,608 & 63,501,393 & 40 & 0 & 15 & 3.9\\
 		\hline
-		hugetric-00000 & 5,824,554 & 8,733,523 & 3 & 2 & 0.03\\
+		delaunay\_n23 & 8,388,608 & 25,165,784 & 28 & 3 & 6 & 1.3\\
+		\hline 
+		hugetrace-00020 & 16,002,413 & 23,998,813 & 3 & 2 & 3 & 0.02\\
 		\hline
-		italy\_osm & 6,686,493 & 7,013,978 & 9 & 1 & 0.4\\
+		delaunay\_n24 & 16,777,216 & 50,331,601 & 26 & 3 & 6 & 1.3\\
 		\hline
-		hugetric-00020 & 7,122,792 & 10,680,777 & 3 & 2 & 0.03\\
+		kmer\_V2a & 55,042,369 & 58,608,800 & 39 & 1 & 2 & 0.7\\
 		\hline
-		rgg\_n\_2\_23\_s0 & 8,388,608 & 63,501,393 & 40 & \textbf{0} & 3.9\\
-		\hline
-		hugetrace-00020 & 16,002,413 & 23,998,813 & 3 & 2 & 0.02\\
-		\hline
-		delaunay\_n24 & 16,777,216 & 50,331,601 & 26 & 3 & 1.3\\
-		\hline
-		europe\_osm & 50,912,018 & 54,054,660 & 13 & 1 & 0.5\\
-		\hline
-		kmer\_V2a & 55,042,369 & 58,608,800 & 39 & 1 & 0.7\\
-		\hline
-		kmer\_U1a & 67,716,231 & 69,389,281 & 35 & 1 & 0.4\\
+		kmer\_U1a & 67,716,231 & 69,389,281 & 35 & 1 & 2 & 0.4\\
 		\hline
 	\end{tabular}
 	\caption{Suite Sparse Matrix Collection~\cite{suitesparse}}
 	\label{tab:suitesparse}
 \end{table}
+%\end{sidewaystable}
+We make the reader aware that rgg\_n\_2\_23\_s0 and packing-500x100x100-b050 have a minimum degree of 0. That means that at least one of the vertices is isolated with no neighbors. We have purposely added two such graphs to test how NVOL performs on this type of graphs too.
 
 \section{Maximum outgoing volume per-partition}
 Using the graphs listed above, we ran METIS with two objectives: NVOL and the standard total communication volume. For each run we then used
 \texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. The number of partitions used for each graph depended on the
 graph's size. To avoid splitting a graph into too many pieces, we required the square of the partition count to be at most equal to the number of vertices in the graph.
 
-The following tables compare the maximum outgoing partition volume between METIS and NVOL. Using METIS as the baseline, we report each value as the percentage difference of NVOL relative to METIS. Cells are color-coded for readability: green indicates that NVOL achieves a lower maximum (better), while red indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions.
-
-Table~\ref{tab:heart_NVOLvsMETIS} shows the results from the Heart dataset. The first thing one notices is how NVOL is able to improve the maximum outgoing communication volume on all runs apart from 4 runs. Most of the time the improvement is between 3-5\% with a few peaks at 10\% and above. Like it was probably clear already from table~\ref{tab:heart_dataset}, these graphs are very similar in structure something that seems to translate in the partitions as well. 
+The following sections will go through the results from each dataset, specifically comparing the maximum outgoing partition volume between METIS and NVOL. Using METIS as the baseline, we report each value as the percentage difference of NVOL relative to METIS, (METIS - NVOL) / METIS $\times 100$. Cells are color-coded for readability: blue indicates that NVOL achieves a lower maximum (better), while orange indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions. Some cells are marked with N/A, which simply means that the graph was not run with that number of partitions.
+\subsection{Heart dataset}
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
-		\hline
-		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+			\hline
+			\textbf{Graphs} & \multicolumn{1}{c|}{2}
 			& \multicolumn{1}{c|}{4}
 			& \multicolumn{1}{c|}{8}
 			& \multicolumn{1}{c|}{16}
@@ -103,116 +99,169 @@ Table~\ref{tab:heart_NVOLvsMETIS} shows the results from the Heart dataset. The 
 			& \multicolumn{1}{c|}{512}
 			& \multicolumn{1}{c|}{1024}
 			& \multicolumn{1}{c|}{2048} \\
-		\hline
-		heart01 & -1.30 & 1.04 & 14.4 & 6.49 & 0 & N/A & N/A & N/A & N/A & N/A & N/A\\
-		\hline
-		heart02 & 0.79 & 5.93 & 6.82 & 3.38 & 10.44 & 10.38 & 17.57 & N/A & N/A & N/A & N/A\\
-		\hline
-		heart03 & 1.78 & 3.85 & 3.21 & 2.91 & 8.42 & 7.08 & 9.47 & 8.96 & 5.34 & N/A & N/A\\
-		\hline
-		heart04 & -0.18 & 4.82 & 3.39 & 2.68 & 4.49 & 4.55 & 2.17 & 5.71 & 6.08 & N/A & N/A\\
-		\hline
-		heart05 & 0.42 & 1.78 & 3.61 & 5.66 & 5.23 & 6.27 & 9.69 & 1.68 & -1.16 & 6.91 & N/A\\
-		\hline
-		heart06 & 0.03 & 2.01 & 2.20 & 2.43 & 5.83 & 4.70 & 5.47 & 9.65 & 4.26 & 8.83 & N/A\\
-		\hline
-		heart07 & -0.10 & 1.58 & 2.72 & 3.56 & 5.85 & 5.26 & 4.92 & 4.59 & 7.90 & 3.53 & 2.75\\
-		\hline
-	\end{tabular}
-	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
+			\hline
+			heart01 & -1.30 & 1.04 & 14.40 & 6.49 & 0.00 & N/A & N/A & N/A & N/A & N/A & N/A\\
+			\hline
+			heart02 & 0.79 & 5.93 & 6.82 & 3.38 & 10.44 & 10.38 & 17.57 & N/A & N/A & N/A & N/A\\
+			\hline
+			heart03 & 1.78 & 3.85 & 3.21 & 2.91 & 8.42 & 7.08 & 9.47 & 8.96 & 5.34 & N/A & N/A\\
+			\hline
+			heart04 & -0.18 & 4.82 & 3.39 & 2.68 & 4.49 & 4.55 & 2.17 & 5.71 & 6.08 & N/A & N/A\\
+			\hline
+			heart05 & 0.42 & 1.78 & 3.61 & 5.66 & 5.23 & 6.27 & 9.69 & 1.68 & -1.16 & 6.91 & N/A\\
+			\hline
+			heart06 & 0.03 & 2.01 & 2.20 & 2.43 & 5.83 & 4.70 & 5.47 & 9.65 & 4.26 & 8.83 & N/A\\
+			\hline
+			heart07 & -0.10 & 1.58 & 2.72 & 3.56 & 5.85 & 5.26 & 4.92 & 4.59 & 7.90 & 3.53 & 2.75\\
+			\hline
+		\end{tabular}
+	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition Heart dataset}
 	\label{tab:heart_NVOLvsMETIS}
 \end{table}
+	
+Table~\ref{tab:heart_NVOLvsMETIS} shows the results for the Heart dataset. The first thing to notice is that NVOL improves the maximum outgoing communication volume in almost all runs. On average NVOL achieves a 4.7\% lower maximum outgoing volume than METIS, with the improvement laying mostly between 2\% and 7\% and peaking at 17.57\%. As was already apparent from Table~\ref{tab:heart_dataset}, these graphs are very similar in structure: they have comparable standard deviations and a very close average number of edges per vertex. This similarity is also reflected in the partitioning results, as most values within each column are relatively close to one another, with only a few exceptions.
+
+It is interesting to note that NVOL generally seems to improve as the number of partitions increases. On average, NVOL performs two to three times as many moves as METIS during a single refinement round, and the number of partitions clearly amplifies this effect. This allows NVOL to explore more options and increases the chance of finding a better partition. Additionally, since more partitions lead to more moves, they also reduce the likelihood of getting stuck in a local minimum.
+
+NVOL fails on 4 occasions: heart01 with $k=2$, heart04 with $k=2$, heart05 with $k=512$, and heart07 with $k=2$. Almost all of the failures occur in the runs with $k=2$. A decisive factor is that having only two partitions severely limits the possible moves. Another likely cause is that, at each refinement step, NVOL sets a ceiling on the outgoing volume of a partition and then allows any move in which the affected partitions do not exceed this maximum. When the number of partitions is large, it is easier to find a move that decreases this value, however, with only two partitions, it is more likely that no available move can improve it. NVOL therefore tends to converge on a local minimum, which may result in a higher maximum outgoing volume than METIS.
+
+Interestingly, Figure~\ref{fig:heart_stddev2} reveals that in every 2-partition run, the standard deviation for NVOL is 0. This means that both partitions have exactly the same outgoing volume, in contrast to METIS, whose standard deviation grows progressively worse as the graph size increases. By only allowing moves that maintain or decrease the maximum outgoing volume, NVOL drives the partitions closer together.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/stddev_comparison_p2}
+	\caption{Standard deviation for 2-partition runs on the Heart dataset}
+	\label{fig:heart_stddev2}
+\end{figure}
+
+NVOL achieves a slightly lower standard deviation than METIS in almost all runs, indicating a more even distribution of outgoing volume across partitions. All the partitioned graphs in the heart dataset seem to follow the same pattern where the standard deviation peaks at $k=8$ and then gradually decreases as the number of partitions grows, regardless of objective function. NVOL maintains an edge throughout, generally having the best difference for $k=2$ and $k=4$ partitions. Table~\ref{tab:heart4_comparison} presents the standard deviations for METIS and NVOL on heart04, which sits in the middle of the dataset and is representative of this behavior; the other graphs show similar numbers.
 
 \begin{table}[h]
 	\centering
-	\begin{tabular}{|l|P|P|P|P|P|P|}
+	\small
+	\setlength{\tabcolsep}{3pt}
+	\begin{tabular}{|l|r|r|r|r|r|}
+		\hline
+		\textbf{Partitions} & \textbf{METIS std.dev} & \textbf{NVOL std. dev.} & \textbf{Diff} & \textbf{METIS tot vol.} & \textbf{NVOL tot vol.}\\
+		\hline
+		\textbf{2} & 34.5 & 0.0 & 34.5 & 8,717 & 8,802\\
+		\hline
+		\textbf{4} & 529.48 & 410.57 & 118.91 & 17,241 & 17,143\\
+		\hline
+		\textbf{8} & 856.11 & 832.52 & 23.59 & 26,791 & 26,805\\
+		\hline
+		\textbf{16} & 670.39 & 652.02 & 18.37 & 40,485 & 40,383\\
+		\hline
+		\textbf{32} & 491.23 & 488.32 & 2.91 & 60,323 & 59,879\\
+		\hline
+		\textbf{64} & 340.87 & 338.55 & 2.32 & 88,753 & 88,676\\
+		\hline
+		\textbf{128} & 238.4 & 231.87 & 6.53 & 128,651 & 127,155\\
+		\hline
+		\textbf{256} & 162.38 & 157.77 & 4.61 & 184,231 & 183,157\\
+		\hline
+		\textbf{512} & 110.09 & 105.71 & 4.38 & 257,257 & 255,394\\
+		\hline
+	\end{tabular}
+	\caption{Comparison of standard deviation and total volume on heart04 graph}
+	\label{tab:heart4_comparison}
+\end{table}
+Both objective functions produce similar distributions of values, but NVOL consistently yields lower standard deviation. This is because NVOL favors moves that bring partition volumes closer together, whereas METIS's purely greedy approach optimizes only for volume reduction. As a result, NVOL's partitions are more evenly balanced.
+
+Table~\ref{tab:heart4_comparison} also reveals that NVOL produces a lower total communication volume in almost every case, not just for heart04, but across the entire heart dataset. On heart04, NVOL loses twice ($k=2$ and $k=8$). When it wins, the improvement is small, but notable: NVOL beats METIS on the very metric METIS optimizes for when run with the volume objective. Given the regular structure of the heart graphs, it appears that the better-balanced partitions NVOL produces tend to indirectly reduce total communication volume as well. By reducing spikes of outgoing volume in some partitions, NVOL appears to reduce the total volume as well.
+
+Aside from the 2-partition cases discussed earlier, heart05 with $k=512$ is the only graph–partition combination in the heart dataset where NVOL produces a higher maximum outgoing volume than METIS. The exact cause is hard to pin down from the data alone; NVOL probably made some moves from which no further improvement could be found. However, with some simple tuning (Section~\ref{sec:tuning}), NVOL recovers a win on this case, suggesting it had indeed settled into a local minimum it could not escape. Even in this failure, the loss is narrow: NVOL exceeds METIS's maximum outgoing volume by only 1.16\%, while still producing 1\% lower total communication volume and a lower standard deviation than METIS.
+
+\subsection{Suite Sparse Matrix Collection}
+\begin{table}[h]
+    \centering
+	\small
+	\setlength{\tabcolsep}{3pt}
+	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
 		\hline
 		\textbf{Graphs} & \multicolumn{1}{c|}{2}
 		& \multicolumn{1}{c|}{4}
 		& \multicolumn{1}{c|}{8}
 		& \multicolumn{1}{c|}{16}
 		& \multicolumn{1}{c|}{32}
-		& \multicolumn{1}{c|}{64} \\
-		\hline
-		fe\_tooth & -1.47 & 9.83 & 13.98 & 7.26 & 19.91 & 6.92 \\
-		\hline
-		citationCiteseer & 11.87 & -1.89 & -6.89 & -13.92 & -11.59 & -4.83 \\
-		\hline
-		pa2010 & -5.02 & 6.69 & 10.11 & 3.08 & 12.54 & 11.03 \\
-		\hline
-		coPapersDBLP & -32.09 & -17.81 & -8.82 & 1.78 & 0.41 & 24.10 \\
-		\hline
-		roadNet-CA & 3.80 & 1.79 & -5.00 & -0.79 & -5.51 & -2.42 \\
-		\hline
-		channel-500x100x100-b050 & 10.67 & 8.79 & 10.32 & 9.83 & 9.92 & 13.69 \\
-		\hline
-		hugetric-00000 & 9.02 & 12.71 & 12.24 & 14.62 & 12.94 & 7.63 \\
-		\hline
-		italy\_osm & 0.00 & -1.02 & 0.90 & -1.09 & 8.87 & 4.00 \\
-		\hline
-		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 \\
-		\hline
-		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 \\
-		\hline
-		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 \\
-		\hline
-		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 \\
-		\hline
-		europe\_osm & -0.41 & 0.27 & -0.73 & -3.66 & -3.75 & -2.54 \\
-		\hline
-		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 \\
-		\hline
-		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 \\
-		\hline
-	\end{tabular}
-	\caption{Percentage difference between NVOL and METIS's max outgoing volume in a partition (2--64 partitions)}
-	\label{tab:suitesparse_METISvsNVOL_low}
-\end{table}
-
-\begin{table}[h]
-	\centering
-	\begin{tabular}{|l|P|P|P|P|P|}
-		\hline
-		\textbf{Graphs} & \multicolumn{1}{c|}{128}
+		& \multicolumn{1}{c|}{64}
+		& \multicolumn{1}{c|}{128}
 		& \multicolumn{1}{c|}{256}
 		& \multicolumn{1}{c|}{512}
 		& \multicolumn{1}{c|}{1024}
 		& \multicolumn{1}{c|}{2048} \\
 		\hline
-		fe\_tooth & 12.72 & 11.92 & N/A & N/A & N/A \\
+		pa2010 & -5.02 & 6.69 & 10.11 & 3.08 & 12.54 & 11.03 & 15.92 & 9.46 & 16.03 & N/A & N/A \\
 		\hline
-		citationCiteseer & 13.18 & 32.82 & 55.08 & N/A & N/A \\
+		coPapersDBLP & -32.09 & -17.81 & -8.82 & 1.78 & 0.41 & 24.10 & 40.37 & 48.44 & 56.70 & N/A & N/A \\
 		\hline
-		pa2010 & 15.92 & 9.46 & 16.03 & N/A & N/A \\
+		\makecell[l]{packing-500x100x100\\-b050} & 3.61 & 0.02 & 4.42 & 5.11 & 8.49 & 5.76 & 9.61 & 13.64 & 9.37 & 11.97 & N/A \\
 		\hline
-		coPapersDBLP & 40.37 & 48.44 & 56.70 & N/A & N/A \\
+		\makecell[l]{channel-500x100x100\\-b050} & 10.67 & 8.79 & 10.32 & 9.83 & 9.92 & 13.69 & 11.57 & 9.82 & 8.54 & 9.72 & 3.16 \\
 		\hline
-		roadNet-CA & 9.13 & -1.11 & 9.35 & 14.63 & N/A \\
+		hugetric-00000 & 9.02 & 12.71 & 12.24 & 14.62 & 12.94 & 7.63 & 16.01 & 18.53 & 1.76 & 16.23 & 19.72 \\
 		\hline
-		channel-500x100x100-b050 & 11.57 & 9.82 & 8.54 & 9.72 & N/A \\
+		italy\_osm & 0.00 & -1.02 & 0.90 & -1.09 & 8.87 & 4.00 & 3.85 & -0.94 & -21.21 & -6.82 & 2.86 \\
 		\hline
-		hugetric-00000 & 16.01 & 18.53 & 1.76 & 16.23 & N/A \\
+		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 & 14.48 & 10.97 & 13.83 & 10.95 & 20.52 \\
 		\hline
-		italy\_osm & 3.85 & -0.94 & -21.21 & -6.82 & N/A \\
+		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 & -0.64 & 8.16 & 18.60 & 7.30 & N/A \\
 		\hline
-		hugetric-00020 & 14.48 & 10.97 & 13.83 & 10.95 & N/A \\
+		delaunay\_n23 & -1.48 & 3.19 & 3.35 & 4.53 & 3.12 & 8.54 & 6.98 & 6.47 & 8.33 & 6.05 & 5.88 \\
 		\hline
-		rgg\_n\_2\_23\_s0 & -0.64 & 8.16 & 18.60 & 7.30 & N/A \\
+		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 & 11.12 & 10.38 & 13.29 & 12.95 & 15.63 \\
 		\hline
-		hugetrace-00020 & 11.12 & 10.38 & 13.29 & 12.95 & N/A \\
+		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 & 4.85 & 7.98 & 5.01 & 2.93 & N/A \\
 		\hline
-		delaunay\_n24 & 4.85 & 7.98 & 5.01 & 2.93 & N/A \\
+		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 & -4.49 & 7.94 & 18.98 & 18.00 & N/A \\
 		\hline
-		europe\_osm & 4.82 & -8.14 & 0.62 & -7.33 & N/A \\
-		\hline
-		kmer\_V2a & -4.49 & 7.94 & 18.98 & 18.00 & N/A \\
-		\hline
-		kmer\_U1a & 28.85 & 46.34 & 34.06 & 37.64 & N/A \\
+		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 & 28.85 & 46.34 & 34.06 & 37.64 & N/A \\
 		\hline
 	\end{tabular}
-	\caption{Percentage difference between NVOL and METIS's max outgoing volume in a partition (128--2048 partitions)}
-	\label{tab:suitesparse_METISvsNVOL_high}
+	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition Suite Sparse Matrix collection}
+	\label{tab:suitesparse_METISvsNVOL}
 \end{table}
+%
+\section{Tuning NVOL}\label{sec:tuning}
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
+		\hline
+		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+		& \multicolumn{1}{c|}{4}
+		& \multicolumn{1}{c|}{8}
+		& \multicolumn{1}{c|}{16}
+		& \multicolumn{1}{c|}{32}
+		& \multicolumn{1}{c|}{64}
+		& \multicolumn{1}{c|}{128}
+		& \multicolumn{1}{c|}{256}
+		& \multicolumn{1}{c|}{512}
+		& \multicolumn{1}{c|}{1024}
+		& \multicolumn{1}{c|}{2048} \\
+		\hline
+		heart01 & -1.30 & 2.08 & 16.49 & 5.19 & 18.18 & N/A & N/A & N/A & N/A & N/A & N/A\\
+		\hline
+		heart02 & 0.57 & 2.92 & 3.41 & 12.55 & 4.62 & 6.76 & 15.45 & N/A & N/A & N/A & N/A\\
+		\hline
+		heart03 & -1.46 & -4.52 & 2.37 & 4.08 & 6.68 & 6.27 & 18.01 & 8.08 & 11.07 & N/A & N/A\\
+		\hline
+		heart04 & -4.99 & 9.60 & 17.20 & 4.19 & 1.84 & 5.65 & 4.20 & 7.35 & 6.89 & N/A & N/A\\
+		\hline
+		heart05 & 5.34 & -1.05 & 3.11 & 6.64 & 8.75 & 7.24 & 8.93 & 0.00 & 5.75 & 2.60 & N/A\\
+		\hline
+		heart06 & 2.75 & -2.86 & 4.51 & -7.14 & 0.35 & 9.89 & 9.77 & 2.82 & -0.93 & 9.16 & N/A\\
+		\hline
+		heart07 & -0.86 & 4.79 & 2.75 & 2.83 & 4.12 & -4.42 & 7.61 & 7.44 & 7.45 & -6.97 & 5.40\\
+		\hline
+	\end{tabular}
+%	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
+	\label{tab:heart_NVOLvsMETIS_4}
+\end{table}
+
+
+
+
+
 %Explain how things are evaluated
 %Look at results
 %	max partition vol in different graphs
