@@ -33,10 +33,9 @@ the Chaste finite-element framework. The resulting meshes were then translated i
 	\label{tab:heart_dataset}
 \end{table}
 
-The second data set was retrieved from \textit{The Suite Sparse Matrix Collection}~\cite{suitesparse}. This collection contains a large variety of matrices and keeps growing. We chose a subset of matrices that were symmetric with different amounts of vertices and with varying average degree. Table~\ref{tab:suitesparse} summarises the 13 matrices we chose ordered by vertex number.
+The second data set was retrieved from \textit{The Suite Sparse Matrix Collection}~\cite{suitesparse}. This collection contains a large variety of matrices and keeps growing. We chose a subset of matrices that were symmetric with different amounts of vertices and with varying average degree. These matrices were then translated from mtx to a format METIS supports. Table~\ref{tab:suitesparse} summarises the 13 matrices we chose ordered by vertex number.
 
 \begin{table}[h]
-%\begin{sidewaystable}
     \centering
 	\small
 	\setlength{\tabcolsep}{3pt}
@@ -74,13 +73,13 @@ The second data set was retrieved from \textit{The Suite Sparse Matrix Collectio
 	\caption{Suite Sparse Matrix Collection~\cite{suitesparse}}
 	\label{tab:suitesparse}
 \end{table}
-%\end{sidewaystable}
+
 We make the reader aware that rgg\_n\_2\_23\_s0 and packing-500x100x100-b050 have a minimum degree of 0. That means that at least one of the vertices is isolated with no neighbors. We have purposely added two such graphs to test how NVOL performs on this type of graphs too.
 
 \section{Maximum outgoing volume per-partition}
-Using the graphs listed above, we ran METIS with two objectives: NVOL and the standard total communication volume. For each run we then used
-\texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. The number of partitions used for each graph depended on the
-graph's size. To avoid splitting a graph into too many pieces, we required the square of the partition count to be at most equal to the number of vertices in the graph.
+Using the graphs listed above, we ran METIS with two objectives: NVOL and the standard total communication volume. For each run we then used \texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. The number of partitions used for each graph depended on the graph's size. To avoid splitting a graph into too many pieces, we required the square of the partition count to be at most equal to the number of vertices in the graph.
+
+It is interesting to mention that for a graph run with the same parameters, METIS will produce the exact same output. This might seem confusing at first given the non-deterministic nature of the algorithm used for the initial partition described in Section~\ref{sec:initial_partitioning}. METIS uses a fixed default seed, so the "random" choice is the same across re-runs. In other words, if the seed is not manually passed, the initial partition will always be the same when running a graph with same parameters multiple times, which translates to the final output as well.
 
 The following sections will go through the results from each dataset, specifically comparing the maximum outgoing partition volume between METIS and NVOL. Using METIS as the baseline, we report each value as the percentage difference of NVOL relative to METIS, (METIS - NVOL) / METIS $\times 100$. Cells are color-coded for readability: blue indicates that NVOL achieves a lower maximum (better), while orange indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions. Some cells are marked with N/A, which simply means that the graph was not run with that number of partitions.
 \subsection{Heart dataset}
@@ -115,17 +114,43 @@ The following sections will go through the results from each dataset, specifical
 			heart07 & -0.10 & 1.58 & 2.72 & 3.56 & 5.85 & 5.26 & 4.92 & 4.59 & 7.90 & 3.53 & 2.75\\
 			\hline
 		\end{tabular}
-	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition Heart dataset}
+%	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition Heart dataset}
+	\caption{Percentage difference in maximum outgoing volume per partition, NVOL vs.\ METIS (Heart dataset)}	
 	\label{tab:heart_NVOLvsMETIS}
 \end{table}
 	
-Table~\ref{tab:heart_NVOLvsMETIS} shows the results for the Heart dataset. The first thing to notice is that NVOL improves the maximum outgoing communication volume in almost all runs. On average NVOL achieves a 4.7\% lower maximum outgoing volume than METIS, with the improvement laying mostly between 2\% and 7\% and peaking at 17.57\%. As was already apparent from Table~\ref{tab:heart_dataset}, these graphs are very similar in structure: they have comparable standard deviations and a very close average number of edges per vertex. This similarity is also reflected in the partitioning results, as most values within each column are relatively close to one another, with only a few exceptions.
+Table~\ref{tab:heart_NVOLvsMETIS} shows the results for the Heart dataset. The first thing to notice is that NVOL improves the maximum outgoing communication volume in almost all runs. On average, NVOL achieves a 4.7\% lower maximum outgoing volume than METIS across all runs, with improvements lying mostly between 2\% and 7\% and peaking at 17.57\%. Table~\ref{tab:heart_NVOLvsMETIS} records in total 4 losses, averaging 0.685\% across them with a peak at 1.30\%. As it was already apparent from Table~\ref{tab:heart_dataset}, these graphs are very similar in structure: they have comparable standard deviations and a very close average number of edges per vertex. This similarity is also reflected in the partitioning results, as most values within each column are relatively close to one another, with only a few exceptions. Looking at the average value per graph confirms this too. Table~\ref{tab:heart_METISvsNVOL_avgs} shows the average percentage difference for the heart dataset ordered by the average. All seven averages fall within a narrow 4.15\% range, from heart04 at 3.75\% to heart02 at 7.90\%, reinforcing that the graphs behave similarly under partitioning.
+ \begin{table}[h]
+ 	%\begin{sidewaystable}
+ 	\centering
+ 	\begin{tabular}{|l|r|}
+ 		\hline
+ 		\textbf{Graphs} & \textbf{Avg. difference}\\
+ 		\hline
+ 		heart04 & 3.75\\
+ 		\hline
+ 		heart07 & 3.87\\
+ 		\hline
+ 		heart05 & 4.01\\
+ 		\hline
+ 		heart01 & 4.13\\
+ 		\hline
+ 		heart06 & 4.54\\
+ 		\hline
+ 		heart03 & 5.67\\
+ 		\hline
+ 		heart02 & 7.90\\
+ 		\hline
+ 	\end{tabular}
+ 	\caption{Average percentage difference in maximum outgoing volume per graph, NVOL vs.\ METIS (Heart dataset)}	
+ 	\label{tab:heart_METISvsNVOL_avgs}
+ \end{table}
 
-It is interesting to note that NVOL generally seems to improve as the number of partitions increases. On average, NVOL performs two to three times as many moves as METIS during a single refinement round, and the number of partitions clearly amplifies this effect. This allows NVOL to explore more options and increases the chance of finding a better partition. Additionally, since more partitions lead to more moves, they also reduce the likelihood of getting stuck in a local minimum.
+It is interesting to note that NVOL generally seems to improve as the number of partitions increases. On average, NVOL performs two to three times as many moves as METIS during a single refinement round, and the number of partitions clearly amplifies this effect. This allows NVOL to explore more options and increases the chance of finding a better partition. Additionally, since more partitions lead to more moves, they also reduce the likelihood of getting stuck in a local minimum. This does, however, greatly affect the time NVOL takes to partition which averages between 7 and 11 times slower than METIS across the heart dataset.
 
-NVOL fails on 4 occasions: heart01 with $k=2$, heart04 with $k=2$, heart05 with $k=512$, and heart07 with $k=2$. Almost all of the failures occur in the runs with $k=2$. A decisive factor is that having only two partitions severely limits the possible moves. Another likely cause is that, at each refinement step, NVOL sets a ceiling on the outgoing volume of a partition and then allows any move in which the affected partitions do not exceed this maximum. When the number of partitions is large, it is easier to find a move that decreases this value, however, with only two partitions, it is more likely that no available move can improve it. NVOL therefore tends to converge on a local minimum, which may result in a higher maximum outgoing volume than METIS.
+The runs where NVOL loses are: heart01 with $k=2$, heart04 with $k=2$, heart05 with $k=512$, and heart07 with $k=2$. Almost all of the failures occur when $k=2$. A decisive factor is that having only two partitions severely limits the possible moves. Another likely cause is that, at each refinement step, NVOL sets a ceiling on the outgoing volume of a partition and then allows any move in which the affected partitions do not exceed this maximum. When the number of partitions is large, it is easier to find a move that decreases this value, however, with only two partitions, it is more likely that no available move can improve it. NVOL therefore tends to converge on a local minimum, which may result in a higher maximum outgoing volume than METIS.
 
-Interestingly, Figure~\ref{fig:heart_stddev2} reveals that in every 2-partition run, the standard deviation for NVOL is 0. This means that both partitions have exactly the same outgoing volume, in contrast to METIS, whose standard deviation grows progressively worse as the graph size increases. By only allowing moves that maintain or decrease the maximum outgoing volume, NVOL drives the partitions closer together.
+Interestingly, Figure~\ref{fig:heart_stddev2} reveals that in every 2-partition run, the standard deviation for NVOL is 0. This means that both partitions have exactly the same outgoing volume, in contrast to METIS, whose standard deviation grows progressively worse as the graph size increases. By only allowing moves that maintain or decrease the maximum outgoing volume, NVOL drives the partitions closer together. 
 
 \begin{figure}[h]
 	\centering
@@ -142,7 +167,7 @@ NVOL achieves a slightly lower standard deviation than METIS in almost all runs,
 	\setlength{\tabcolsep}{3pt}
 	\begin{tabular}{|l|r|r|r|r|r|}
 		\hline
-		\textbf{Partitions} & \textbf{METIS std.dev} & \textbf{NVOL std. dev.} & \textbf{Diff} & \textbf{METIS tot vol.} & \textbf{NVOL tot vol.}\\
+		\textbf{Partitions} & \textbf{METIS std. dev} & \textbf{NVOL std. dev.} & \textbf{Diff} & \textbf{METIS tot vol.} & \textbf{NVOL tot vol.}\\
 		\hline
 		\textbf{2} & 34.5 & 0.0 & 34.5 & 8,717 & 8,802\\
 		\hline
@@ -163,14 +188,25 @@ NVOL achieves a slightly lower standard deviation than METIS in almost all runs,
 		\textbf{512} & 110.09 & 105.71 & 4.38 & 257,257 & 255,394\\
 		\hline
 	\end{tabular}
-	\caption{Comparison of standard deviation and total volume on heart04 graph}
+	\caption{Comparison of the standard deviation and total volume on heart04 graph}
 	\label{tab:heart4_comparison}
 \end{table}
-Both objective functions produce similar distributions of values, but NVOL consistently yields lower standard deviation. This is because NVOL favors moves that bring partition volumes closer together, whereas METIS's purely greedy approach optimizes only for volume reduction. As a result, NVOL's partitions are more evenly balanced.
+Both objective functions produce similar distributions of values, but NVOL consistently yields lower standard deviation. This is because NVOL favors moves that bring partition volumes closer together, whereas METIS's purely greedy approach optimizes only for volume reduction. As a result, NVOL's partition volumes are more evenly balanced.
 
-Table~\ref{tab:heart4_comparison} also reveals that NVOL produces a lower total communication volume in almost every case, not just for heart04, but across the entire heart dataset. On heart04, NVOL loses twice ($k=2$ and $k=8$). When it wins, the improvement is small, but notable: NVOL beats METIS on the very metric METIS optimizes for when run with the volume objective. Given the regular structure of the heart graphs, it appears that the better-balanced partitions NVOL produces tend to indirectly reduce total communication volume as well. By reducing spikes of outgoing volume in some partitions, NVOL appears to reduce the total volume as well.
+Table~\ref{tab:heart4_comparison} also reveals that NVOL produces a lower total communication volume in many runs, not just for heart04, but across the entire heart dataset. On heart04, NVOL loses twice ($k=2$ and $k=8$). When it wins, the improvement is small, but notable: NVOL beats METIS on the very metric METIS optimizes for when run with the volume objective. Given the regular structure of the heart graphs, it appears that the better-balanced partitions NVOL produces tend to indirectly reduce total communication volume as well. 
+%By reducing spikes of outgoing volume in some partitions, NVOL appears to reduce the total volume as well.
 
-Aside from the 2-partition cases discussed earlier, heart05 with $k=512$ is the only graph–partition combination in the heart dataset where NVOL produces a higher maximum outgoing volume than METIS. The exact cause is hard to pin down from the data alone; NVOL probably made some moves from which no further improvement could be found. However, with some simple tuning (Section~\ref{sec:tuning}), NVOL recovers a win on this case, suggesting it had indeed settled into a local minimum it could not escape. Even in this failure, the loss is narrow: NVOL exceeds METIS's maximum outgoing volume by only 1.16\%, while still producing 1\% lower total communication volume and a lower standard deviation than METIS.
+This increased balance does come with some trade offs. Figure~\ref{fig:heart4_p4dist} shows a plot of the outgoing volumes of heart04 when partitioned with $k=4$. The blue bars represent METIS and the orange ones NVOL. By looking closely at each bar one might notice that NVOL's bars are all higher than METIS's apart from the tallest one. This makes sense as NVOL moves the vertices in a way that pushes down the maximum potentially at the cost of other partitions. As a result the pattern shown in Figure~\ref{fig:heart4_p4dist} can be found in most results from NVOL.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/heart04_p4dist}
+	\caption{Distribution of partition volumes in heart04 $k=4$}
+	\label{fig:heart4_p4dist}
+\end{figure}
+
+Aside from the 2-partition cases discussed earlier, heart05 with $k=512$ is the only graph–partition combination in the heart dataset where NVOL produces a higher maximum outgoing volume than METIS. The exact cause is hard to pin down from the data alone; NVOL probably made some moves from which no further improvement could be found. However, with some simple tuning (Section~\ref{sec:tuning}), NVOL recovers a win on this case, suggesting it had indeed settled into a local minimum it could not escape. Even in this failure, the loss is narrow: NVOL exceeds METIS's maximum outgoing volume by only 1.16\%. It does, however, produce 1\% lower total communication volume and a lower standard deviation than METIS.
+
+Throughout the Heart dataset, NVOL improves the maximum outgoing communication volume in 57 out of 61 runs (4.7\% on average, peaking at 17.57\%) and produces more evenly balanced partition volumes in almost every run. It also yields slightly lower total communication volume in many cases, despite not optimizing for it directly. The main weakness is at $k=2$, where the constrained move space limits NVOL's ability to lower the maximum outgoing volume. NVOL does, however, produce perfectly even partitions in these cases. 
 
 \subsection{Suite Sparse Matrix Collection}
 \begin{table}[h]
@@ -205,23 +241,98 @@ Aside from the 2-partition cases discussed earlier, heart05 with $k=512$ is the 
 		\hline
 		hugetric-00020 & 7.50 & 7.05 & 7.47 & 7.27 & 8.39 & 8.05 & 14.48 & 10.97 & 13.83 & 10.95 & 20.52 \\
 		\hline
-		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 & -0.64 & 8.16 & 18.60 & 7.30 & N/A \\
+		rgg\_n\_2\_23\_s0 & -6.46 & 4.47 & 6.86 & 6.33 & 4.84 & 6.47 & -0.64 & 8.16 & 18.60 & 7.30 & 0.0 \\
 		\hline
 		delaunay\_n23 & -1.48 & 3.19 & 3.35 & 4.53 & 3.12 & 8.54 & 6.98 & 6.47 & 8.33 & 6.05 & 5.88 \\
 		\hline
 		hugetrace-00020 & 8.27 & 8.34 & 7.07 & 7.41 & 8.51 & 8.46 & 11.12 & 10.38 & 13.29 & 12.95 & 15.63 \\
 		\hline
-		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 & 4.85 & 7.98 & 5.01 & 2.93 & N/A \\
+		delaunay\_n24 & -2.60 & 4.71 & 5.97 & 2.40 & 6.23 & 5.93 & 4.85 & 7.98 & 5.01 & 2.93 & 5.01 \\
 		\hline
 		kmer\_V2a & -0.28 & 10.34 & 20.27 & 3.98 & 1.53 & 11.14 & -4.49 & 7.94 & 18.98 & 18.00 & N/A \\
 		\hline
 		kmer\_U1a & 0.72 & 6.71 & 14.18 & 26.55 & 29.76 & 35.88 & 28.85 & 46.34 & 34.06 & 37.64 & N/A \\
 		\hline
 	\end{tabular}
-	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition Suite Sparse Matrix collection}
+	\caption{Percentage difference in maximum outgoing volume per partition, NVOL vs.\ METIS (Suite Sparse Matrix Collection)}	
+
 	\label{tab:suitesparse_METISvsNVOL}
 \end{table}
-%
+Now consider the results for the Suite Sparse Collection in Table~\ref{tab:suitesparse_METISvsNVOL}. The graphs vary considerably in size and structure, and so do the results. Regardless, NVOL is able to achieve a lower maximum outgoing volume than METIS on 89\% of the time. Compared to the Heart dataset, NVOL wins more convincingly with an average improvement of 9.19\% across all runs. NVOL is able to produce an improvement above 20\% on several runs with a peak at 56.70\% for coPapersDBLP with $k=512$. However, NVOL loses also more times and by more than the Heart dataset. In the 15 recorded losses NVOL averages 7.4\% loss with a peak at 32.09\% for coPapersDBLP with $k=2$. Most losses are concentrated in the italy\_osm graph and for several runs with $k=2$.
+
+Table~\ref{tab:suitesparse_METISvsNVOL_avgs} reports the average per graph, where once again the graph difference is represented by the spread. Apart from italy\_osm, NVOL wins on average by at least 4.34\% and on the biggest graph kmer\_U1a it wins on average by 26.07\%. The table, however, does not seem to suggest any obvious relationship between graph properties (size, average degree, or degree variance) and the magnitude of the improvement, as the two next best winners are very different between them. 
+\begin{table}[h]
+	%\begin{sidewaystable}
+	\centering
+	\begin{tabular}{|l|r|}
+		\hline
+		\textbf{Graphs} & \textbf{Avg. difference}\\
+		\hline
+		italy\_osm & -0.96\\ %3
+		\hline
+		delaunay\_n24 & 4.34\\ %6
+		\hline
+		delaunay\_n23 & 5.00\\ %6
+		\hline
+		rgg\_n\_2\_23\_s0 & 5.59\\ %15
+		\hline
+		packing-500x100x100-b050 & 7.20\\ %16
+		\hline
+		kmer\_V2a & 8.74\\ %2
+		\hline
+		pa2010 & 8.87\\ %4
+		\hline
+		channel-500x100x100-b050 & 9.64\\ %18
+		\hline
+		hugetrace-00020 & 10.13\\ %3
+		\hline
+		hugetric-00020 & 10.59\\ %3
+		\hline
+		coPapersDBLP & 12.56\\ %56
+		\hline
+		hugetric-00000 & 12.86\\ %3
+		\hline
+		kmer\_U1a & 26.07\\ %2
+		\hline
+	\end{tabular}
+	\caption{Average percentage difference in maximum outgoing volume per graph, NVOL vs.\ METIS (Suite Sparse Matrix Collection)}	
+	\label{tab:suitesparse_METISvsNVOL_avgs}
+\end{table}
+
+Even though there seems to be no clear 
+
+In total, NVOL loses 15 of 138 runs. Setting italy\_osm aside (discussed below), this drops to 10 losses, 6 of which occur at $k=2$. As with the Heart dataset, NVOL achieves a more even volume distribution at the cost of a higher per-partition maximum on these specific $k=2$ runs. Because the standard deviations vary across orders of magnitude for METIS, we report them in Table~\ref{tab:suitesparse_2pComparison} rather than plot them as in Figure~\ref{fig:heart_stddev2}.
+\begin{table}[h]
+	\centering
+	\small
+	\setlength{\tabcolsep}{3pt}
+	\begin{tabular}{|l|r|r|r|r|r|}
+		\hline
+		\textbf{Graphs} & \textbf{METIS std. dev.} & \textbf{NVOL std. dev.} & \textbf{Diff} & \textbf{METIS tot. vol.} & \textbf{NVOL tot. vol.}\\
+		\hline
+		pa2010 & 6.5 & 0.0 & 6.5 & 425 & 460\\
+		\hline
+		coPapersDBLP & 8,854.0 & 5.5 & 8,848.5 & 166,524 & 243,349\\
+		\hline
+		rgg\_n\_2\_23\_s0 & 36.0 & 0.0 & 36.0 & 8,684 & 9,322\\
+		\hline
+		delaunay\_n23 & 2.0 & 0.0 & 2.0 & 5,672 & 5,760\\
+		\hline
+		delaunay\_n24 & 5.0 & 0.0 & 5.0 & 8,302 & 8,528\\
+		\hline
+		kmer\_V2a & 2,876.5 & 0.0 & 2,876.5 & 265,323 & 271,834\\
+		\hline
+	\end{tabular}
+	\caption{Comparison of the standard deviation and total volume the 2-partition failing runs in table~\ref{tab:suitesparse_METISvsNVOL}}
+	\label{tab:suitesparse_2pComparison}
+\end{table}
+
+
+%talk about italy_osm
+%look at copapers that fails badly for few partitions then wins by a lot
+%talk about wins
+%mention other losses other than k=2
+
 \section{Tuning NVOL}\label{sec:tuning}
 \begin{table}[h]
 	\centering

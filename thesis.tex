@@ -28,13 +28,13 @@
 	\IfStrEq{#1}{N/A}{#1}{%
 		\edef\a{\fpeval{abs(#1)}}%
 		\ifnum\fpeval{(#1)<0}=1
-		\ifnum\fpeval{\a>20}=1 \cellcolor{orange!75}%
-		\else\ifnum\fpeval{\a>5}=1 \cellcolor{orange!55}%
-		\else \cellcolor{orange!35}\fi\fi
+		\ifnum\fpeval{\a>20}=1 \cellcolor{orange!85}%
+		\else\ifnum\fpeval{\a>5}=1 \cellcolor{orange!45}%
+		\else \cellcolor{orange!25}\fi\fi
 		#1%
 		\else
 		\ifnum\fpeval{\a>20}=1 \cellcolor{cyan!65}%
-		\else\ifnum\fpeval{\a>10}=1 \cellcolor{cyan!45}%
+		\else\ifnum\fpeval{\a>10}=1 \cellcolor{cyan!55}%
 		\else \cellcolor{cyan!25}\fi\fi
 		\textbf{#1}%
 		\fi
