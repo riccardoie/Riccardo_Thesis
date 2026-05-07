@@ -396,11 +396,38 @@ At high partition counts, NVOL's advantage on coPapersDBLP becomes substantial: 
 
 
 \subsubsection{kmer\_U1a and kmer\_V2a}
-%what is kmer 
-%improves gradually with very solid numbers
-%compare to coPapers?
-%why does kmer_v2a not perform as well?
+Both kmer\_U1a and kmer\_V2a are protein k-mer graphs from the GenBank group of the SuiteSparse Matrix Collection, originally distributed as part of the 2018 GraphChallenge. Each vertex represents a short segment of amino acids (a k-mer) extracted from protein sequences, and edges connect k-mers that overlap in the underlying sequence. These are the two largest graphs in our selection, with kmer\_U1a containing 67.7 million vertices and kmer\_V2a 55 million. Both instances are extremely sparse, with an average degree of approximately 2, and highly fragmented into many small connected components.
 
+Despite their structural similarity, the two graphs yield noticeably different partitioning results. On the larger instance, kmer\_U1a, NVOL achieves consistent improvements over METIS on the maximum outgoing volume, averaging 26.07\% across all values of $k$. On kmer\_V2a the gain is more modest: NVOL loses to METIS at $k=2$ and $k=128$, but still averages a positive 8.74\%. On the total volume metric, however, both graphs fail to improve over METIS, and the gap on kmer\_V2a widens as $k$ grows.
+
+The two graphs also differ in how evenly NVOL distributes volume across partitions. On kmer\_V2a, NVOL produces a higher run-to-run standard deviation than on kmer\_U1a, where the standard deviation remains zero for all $k < 16$ and only begins to grow from $k=16$ onward. Figures~\ref{fig:kmer_V2a_voldev} and~\ref{fig:kmer_U1a_voldev} show the total volume and standard deviation across all runs on kmer\_V2a and kmer\_U1a respectively.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/kmer_V2a_voldev}
+	\caption{Total volume and standard deviation comparison of METIS and NVOL across all runs on kmer\_V2a}
+	\label{kmer_V2a_voldev}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/kmer_U1a_voldev}
+	\caption{Total volume and standard deviation comparison of METIS and NVOL across all runs on kmer\_U1a}
+	\label{kmer_U1a_voldev}
+\end{figure}
+
+A possible explanation for these differences lies in the disparity of fragmentation. Although the two graphs differ in size by only 18\%, kmer\_U1a contains 44,132 connected components against 15,343 in kmer\_V2a, almost three times as many. The much larger number of small components in kmer\_U1a may give the partitioner more flexibility when distributing weight across blocks, while in kmer\_V2a the components are on average larger and harder to distribute as 
+$k$ grows, which is consistent with the higher standard deviation observed for both METIS and NVOL compared to kmer\_U1a.
+
+The combination of low standard deviation and improvement on the maximum outgoing volume is most evident in the high $k$ runs of kmer\_U1a. Figure~\ref{fig:kmer_U1a_p128dist} shows the per-partition outgoing-volume distribution of METIS and NVOL at $k=128$. As in Figure~\ref{fig:coPapers_p128dist}, NVOL produces partitions with much more uniform volumes than METIS and visibly reduces the maximum outgoing volume. The pattern becomes even more pronounced at higher values of $k$, but those plots are harder to read, so we show only $k=128$ here.
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=\linewidth]{pictures/kmer_U1a_p128dist}
+	\caption{Distribution of partition volumes in kmer\_U1a $k=128$}
+	\label{fig:kmer_U1a_p128dist}
+\end{sidewaysfigure}
+
+Overall, the kmer graphs paint a nuanced picture of NVOL's behaviour on very sparse, highly fragmented inputs. On the maximum outgoing volume, NVOL clearly outperforms METIS on average for both graphs. On the total volume, however, neither graph shows an improvement, indicating that NVOL's redistribution of load comes at the cost of a higher average volume per partition. The contrast between the two instances further suggests that fragmentation level matters: kmer\_U1a, with nearly three times as many connected components, admits more stable and more consistent improvements, whereas the larger components of kmer\_V2a constrain how the volume can be balanced as $k$ grows. This is uneven volume distribution is visible for both NVOL and METIS.
 
 \subsubsection{Numerical simulation graphs}
 The most represented group of graphs in our selection are numerical simulation graphs. These graphs are derived from physical domains, a chunk of fluid, a 3D box of space, a mechanical structure, by discretizing the domain into a mesh of small cells. Each vertex represents a cell, and edges connect cells that share a face or boundary in the mesh. This type of graph tends to be very regular: most vertices have a similar number of neighbors, and there are no hubs like citation networks. Five of our graphs fall into this category: channel-500x100x100-b050, packing-500x100x100-b050, hugetric-00000, hugetric-00020, and hugetrace-00020.
