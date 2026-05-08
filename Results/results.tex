@@ -393,8 +393,6 @@ Figure~\ref{fig:coPapers_p8dist} shows an example that supports this hypothesis.
 
 At high partition counts, NVOL's advantage on coPapersDBLP becomes substantial: the maximum outgoing volume improves by 40.37\%, 48.44\%, and 56.70\% over METIS at $k=128$, $k=256$, and $k=512$ respectively. Figure~\ref{fig:coPapers_p128dist} illustrates the $k=128$ case, NVOL's partition volumes cluster tightly around the mean while still achieving a significantly lower maximum than METIS. The struggle at low $k$ and these gains at high $k$ are two sides of the same coin: the heavy-tailed degree distribution that prevents balancing with few partitions becomes a feature NVOL can exploit once $k$ is large enough to spread the hubs across many partitions. Citation networks therefore appear to be a graph class where NVOL's balancing strategy has real potential, provided $k$ is sufficiently high.
 
-
-
 \subsubsection{kmer\_U1a and kmer\_V2a}
 Both kmer\_U1a and kmer\_V2a are protein k-mer graphs from the GenBank group of the SuiteSparse Matrix Collection, originally distributed as part of the 2018 GraphChallenge. Each vertex represents a short segment of amino acids (a k-mer) extracted from protein sequences, and edges connect k-mers that overlap in the underlying sequence. These are the two largest graphs in our selection, with kmer\_U1a containing 67.7 million vertices and kmer\_V2a 55 million. Both instances are extremely sparse, with an average degree of approximately 2, and highly fragmented into many small connected components.
 
@@ -475,9 +473,6 @@ Table~\ref{tab:hugetric00000_comparison} shows the percentage difference in tota
 
 On hugetric-00000 NVOL produces excellent partitions, achieving a lower total communication volume, a lower maximum per-partition volume, and a more even distribution than METIS. This pattern is also visible across the remaining numerical simulation graphs, making NVOL a valuable partitioning objective for this graph class.
 
-
-
-
 \subsubsection{Geometric graphs}
 The remaining graphs all fall under the geometric graph class. These graphs are derived from points in space rather than from physical adjacency or relationships. pa2010, for example, represents the Pennsylvania Census 2010 redistricting graph, with vertices as Census blocks and edges connecting blocks that share a border. The two delaunay graphs are synthetic Delaunay triangulations of random points in a 2D unit square, while rgg\_n\_2\_23\_s0 is a random geometric graph. All four have low degree variance with no hubs.
 
@@ -499,6 +494,7 @@ Geometric graphs are therefore a class where NVOL is reliably useful: it consist
 \section{Tuning NVOL}\label{sec:tuning}
 \begin{table}[h]
 	\centering
+	\resizebox{\linewidth}{!}{
 	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
 		\hline
 		\textbf{Graphs} & \multicolumn{1}{c|}{2}
@@ -528,12 +524,87 @@ Geometric graphs are therefore a class where NVOL is reliably useful: it consist
 		heart07 & -0.86 & 4.79 & 2.75 & 2.83 & 4.12 & -4.42 & 7.61 & 7.44 & 7.45 & -6.97 & 5.40\\
 		\hline
 	\end{tabular}
+	}
 %	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
 	\label{tab:heart_NVOLvsMETIS_4}
 \end{table}
 
+\begin{table}[h]
+	%\begin{sidewaystable}
+	\centering
+	\begin{tabular}{|l|r|r|}
+		\hline
+		\textbf{Graphs} & \makecell{\textbf{NVOL}\\\textbf{avg. diff.}} & \makecell{\textbf{NVOL 4\%}\\\textbf{avg. diff.}}\\
+		\hline
+		heart04 & 3.75 & 5.77\\
+		\hline
+		heart07 & 3.87 & 2.74\\
+		\hline
+		heart05 & 4.01 & 4.73\\
+		\hline
+		heart01 & 4.13 & 8.13\\
+		\hline
+		heart06 & 4.54 & 2.83\\
+		\hline
+		heart03 & 5.67 & 5.62\\
+		\hline
+		heart02 & 7.90 & 6.61\\
+		\hline
+	\end{tabular}
+	\caption{Average percentage difference in maximum outgoing volume per graph, NVOL vs.\ METIS (Suite Sparse Matrix Collection)}	
+	\label{tab:NVOL_NVOL4_avg}
+\end{table}
 
 
+
+\begin{table}[h]
+	\centering
+	\resizebox{\linewidth}{!}{
+	\begin{tabular}{|l|P|P|P|P|P|P|P|P|P|P|P|}
+		\hline
+		\textbf{Graphs} & \multicolumn{1}{c|}{2}
+		& \multicolumn{1}{c|}{4}
+		& \multicolumn{1}{c|}{8}
+		& \multicolumn{1}{c|}{16}
+		& \multicolumn{1}{c|}{32}
+		& \multicolumn{1}{c|}{64}
+		& \multicolumn{1}{c|}{128}
+		& \multicolumn{1}{c|}{256}
+		& \multicolumn{1}{c|}{512}
+		& \multicolumn{1}{c|}{1024}
+		& \multicolumn{1}{c|}{2048} \\
+		\hline
+		pa2010 & -18.26 & 11.85 & 13.48 & 3.69 & 3.14 & 14.07 & 12.44 & 11.49 & 19.08 & N/A & N/A\\
+		\hline
+		coPapersDBLP & -31.82 & -17.75 & -9.85 & 1.09 & 10.57 & 22.58 & 40.18 & 49.04 & 57.51 & N/A & N/A\\
+		\hline
+		\makecell[l]{packing\\-500x100x100\\-b050} & -9.51 & -0.76 & -7.29 & 11.83 & 12.33 & 5.62 & 5.46 & 14.52 & 3.51 & 11.76 & N/A\\
+		\hline
+		\makecell[l]{channel\\-500x100x100\\-b050} & 11.49 & 9.46 & 9.48 & 9.22 & 17.57 & 12.91 & 10.12 & 10.60 & -2.73 & 9.92 & 5.18\\
+		\hline
+		hugetric-00000 & 16.01 & 14.29 & 6.68 & 15.72 & 13.17 & 4.04 & 8.69 & 16.14 & 12.94 & 12.08 & 21.60\\
+		\hline
+		italy\_osm & 4.41 & -6.12 & -32.43 & -59.78 & 26.61 & 2.00 & 13.08 & 1.89 & 12.12 & -25.00 & -22.86\\
+		\hline
+		hugetric-00020 & 4.81 & 11.31 & 17.91 & 1.62 & 1.02 & 0.94 & 15.03 & 11.90 & 21.36 & 13.43 & 13.10\\
+		\hline
+		rgg\_n\_2\_23\_s0 &-4.55 & 3.40 & 2.00 & 9.06 & 5.45 & 7.47 & 8.25 & 3.54 & 16.22 & 3.17 & 5.01\\
+		\hline
+		delaunay\_n23 & -1.94 & 5.67 & 3.07 & 6.61 & 4.88 & 4.24 & 8.32 & 11.99 & 10.83 & 7.67 & 6.47\\
+		\hline
+		hugetrace-00020 & 3.83 & 8.04 & 3.70 & 3.57 & 12.26 & 5.74 & 0.97 & 13.59 & 12.94 & 10.23 & 24.78\\
+		\hline
+		delaunay\_n24 & 0.77 & 5.34 & 10.34 & 6.33 & 9.57 & 1.41 & 3.82 & 7.80 & 2.98 & -6.84 & 1.37\\
+		\hline
+		kmer\_V2a & -2.14 & 9.35 & 20.52 & 13.63 & 0.66 & 6.48 & -2.14 & 6.54 & 23.22 & 21.48 & N/A\\
+		\hline
+		kmer\_U1a & 0.53 & 6.59 & 14.77 & 26.60 & 29.53 & 35.46 & 29.07 & 49.69 & 33.61 & 34.63 & N/A\\
+		\hline
+	\end{tabular}
+	}
+%	\caption{Comparison of the percentual difference between NVOL and METIS's max outgoing volume in a partition}
+%\label{key}
+\end{table}
 \section{Model estimates}
 
 %Explain how things are evaluated
