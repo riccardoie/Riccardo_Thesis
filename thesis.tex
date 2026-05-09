@@ -26,6 +26,7 @@
 
 \newcommand{\auto}[1]{%
 	\IfStrEq{#1}{N/A}{#1}{%
+	\IfStrEq{#1}{N/R}{#1}{%
 		\edef\a{\fpeval{abs(#1)}}%
 		\ifnum\fpeval{(#1)<0}=1
 		\ifnum\fpeval{\a>20}=1 \cellcolor{orange!85}%
@@ -38,7 +39,7 @@
 		\else \cellcolor{cyan!25}\fi\fi
 		\textbf{#1}%
 		\fi
-	}%
+	}}%
 }
 \newcolumntype{P}{>{\collectcell\auto}r<{\endcollectcell}}
 
