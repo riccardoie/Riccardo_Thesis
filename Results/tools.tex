@@ -83,3 +83,7 @@ Our script takes four arguments: the graph, the version of NVOL, the number of p
 The script begins by computing the incoming communication volume for each partition. From these volumes, together with the bandwidth and latency parameters, we estimate how long each partition takes to complete its communication step. The formulas take the incoming volumes sorted from lowest to highest and evaluate the receive and send times for each partition: formula 7 estimates the total time a partition spends receiving messages as a function of its incoming volume, while formula 9 pinpoints the time to send a message to a specific destination.
 
 Formula 8 then combines these results by taking the maximum of the receive time and the individual send completion times,a partition can only progress as fast as its slowest communication operation, and adds the startup latency multiplied by the number of neighboring partitions. This captures the fact that every message exchange incurs a fixed startup cost regardless of the volume transferred. All three formulas are applied to every partition, and the results are plotted as a bar graph.
+
+\begin{equation}\label{eq:formula8}
+	T_i = M^{in}_i \cdot \tau + max\left(t^{\mathrm{recv}}_{i-1}, t^{\mathrm{send}}_{i,0}, t^{\mathrm{send}}_{i,1}, \dots, t^{\mathrm{send}}_{i,M^{\mathrm{out}}_i-1}\right)
+\end{equation}

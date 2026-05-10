@@ -215,7 +215,7 @@ Aside from the 2-partition cases discussed earlier, heart05 with $k=512$ is the 
 
 Throughout the Heart dataset, NVOL improves the maximum outgoing communication volume in 57 out of 61 runs (4.7\% on average, peaking at 17.57\%) and produces more evenly balanced partition volumes in almost every run. It also yields slightly lower total communication volume in many cases, despite not optimizing for it directly. The main weakness is at $k=2$, where the constrained move space limits NVOL's ability to lower the maximum outgoing volume. NVOL does, however, produce perfectly even partitions in these cases. 
 
-\subsection{Suite Sparse Matrix Collection}
+\subsection{Suite Sparse Matrix Collection}\label{sec:Suite sparse}
 
 \begin{table}[h]
     \centering
@@ -675,19 +675,19 @@ Unlike in the Heart dataset, graph size does not appear to drive the difference 
 The 4\% setting is therefore best treated as a per-graph tuning option rather than a default: it can yield better results in some cases, but with no clear predictor of when it helps and when it hurts.
 
 \section{Model estimates}
-Thus far we have evaluated how NVOL performs based on outgoing communication volume metrics, however the end goal of graph partitioning is to improve performances when running the partitions. In order to test if the lower volumes actually improved performances we used the model estimate described in Section~\ref{sec:graph tools}. We point out that this is simply a model, and not actual runtime, meaning that these values are an approximation that models very closely a real machine. 
+Thus far we have evaluated how NVOL performs based on outgoing communication volume metrics, however the end goal of graph partitioning is to improve performance when running the partitions. In order to test if the lower volumes actually improved performance we used the model estimate described in Section~\ref{sec:graph tools}. We point out that this is simply a model, and not actual runtime, meaning that these values are an approximation that closely models a real machine. 
 
-We test our graphs for a setup with 32 processors with a startup latency and a set of bandwidths we got sent by the authors of~\cite{Xing_of_Heterogeneous}. These values are taken from the bandwidths of an actual parallel computer and are not a universal set. The results would look different using another machine. Sadly we were not able to retrieve the bandwidth for a bigger machine in order to test some of our best results at higher $k$. 
+We test our graphs for a setup with 32 processors with a startup latency and a set of bandwidths we got sent by the authors of~\cite{Xing_of_Heterogeneous}. These values are taken from the bandwidths of an actual parallel computer and are not a universal set. The results would look different using another machine. Unfortunately, we were not able to retrieve the bandwidth for a bigger machine in order to test some of our best results at higher $k$. 
 
-Since a parallel application is generally as slow as its slowest process, we start this evaluation by looking at this value first. On each graph we compare the slowest process rutime on METIS and NVOL and calculate the percentage difference. If we define the runtime as $R$, each value in the following table~\ref{tab:runtime_NVOL_NVOL_4} equals to $(R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$, where a positive value means that NVOL has a smaller runtime and vice versa. We check this value for both NVOL and NVOL with 4\% imbalance to default METIS with the total communication volume objective, all at $k=32$. 
+Since a parallel application is generally as slow as its slowest process, we start this evaluation by looking at this value first. On each graph we compare the slowest process runtime on METIS and NVOL and calculate the percentage difference. If we define the runtime as $R$, each value in the following table~\ref{tab:runtime_NVOL_NVOL_4} equals to $\Delta R_{\mathrm{NVOL}} = (R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$, where positive values indicate NVOL is faster and vice versa. We check this value for both NVOL and NVOL with 4\% imbalance to default METIS with the total communication volume objective, all at $k=32$. 
  
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|l|r|r|}
 		\hline
 		\textbf{Graphs} 
-		& \textbf{$R_{\mathrm{NVOL}}$}
-		& \textbf{$R_{\mathrm{NVOL 4\%}}$}\\
+		& \textbf{$\Delta R_{\mathrm{NVOL}}$}
+		& \textbf{$\Delta R_{\mathrm{NVOL 4\%}}$}\\
 		\hline
 		heart01 & 0.0\% & 9.99\%\\
 		\hline
@@ -730,16 +730,27 @@ Since a parallel application is generally as slow as its slowest process, we sta
 		kmer\_U1a & 2.2\% & 2.1\%\\ %2
 		\hline
 	\end{tabular}
-	\caption{Percentage difference for the slowest runtime of NVOL and NVOL 4\% compared to METIS (e.g. $(R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$).}	
+	\caption{Percentage difference for the slowest runtime of NVOL and NVOL 4\% compared to METIS (e.g. $\Delta R_{\mathrm{NVOL}} = (R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$).}	
 	\label{tab:runtime_NVOL_NVOL_4}
 \end{table}
 
-Table~\ref{tab:runtime_NVOL_NVOL_4} shows how NVOL overall wins 60\% of the time. More specifically using the default imbalance it has 13 wins, one tie and 6 losses, while the 4\% imbalance runs have 11 wins and 9 losses. NVOL with 4\% maintains the same pattern of having a greater variance in its results with a greater span between best and worst results. Both approaches struggles greatly for coPapersDBLP yielding slower runtimes. The heart dataset and the numerical simulations have some good results. For default NVOL they are all positive, NVOL with 4\% records a few losses here too. 
+Table~\ref{tab:runtime_NVOL_NVOL_4} shows how across both configurations, NVOL wins 60\% of the time. More specifically using the default imbalance it has 13 wins, one tie and 6 losses, while the 4\% imbalance runs have 11 wins and 9 losses. NVOL with 4\% maintains the same pattern (see Section~\ref{sec:Suite sparse}) of having a greater variance in its results with a greater span between best and worst results. Both approaches struggle greatly for coPapersDBLP yielding slower runtimes. The heart dataset and the numerical simulations have some good results. For default NVOL they are all positive, NVOL with 4\% records a few losses here too. 
+
+Figure~\ref{fig:heart06_runtimeNvol} shows the best result out of the bigger graphs. On heart06, that has 4 million vertices, NVOL manages to improve the slowest time by 6.6\%. We choose to focus on this graph instead of heart01 which has only 1340 vertices. In a small graph like heart01, the volume affects the runtime less than the startup latency does. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/heart06_timesNvol}
+	\caption{Estimated runtimes per partition on heart06 $k=32$ for METIS and NVOL. The value after NVOL represents the percentage difference between the highest value for METIS and NVOL.}
+	\label{fig:heart06_runtimeNvol}
+\end{figure}
+
+The next subsections will discuss the two cases where NVOL produces significantly worse runtimes. As it will become clear, the runtime is not only dependent on the single maximum value, but also of other factors like distribution of volume and which partitions have the highest number of neighbors.
 
 \subsection{coPapersDBLP graph estimate results}
-Compared to METIS, NVOL and NVOL with 4\% imbalance produce 29.4\% and 17.97\% slower runtimes respectively. Both have lower max outgoing volumes per partition, NVOL with 0.41\% better and NVOL with 4\% with 10.57\%. Both yield also a lower maximum incoming volume, improving METIS by 1.37\% and 22.19\% respsecitvely. 
+Compared to METIS, NVOL and NVOL with 4\% imbalance produce 29.4\% and 17.97\% slower runtimes respectively. Both have lower max outgoing volumes per partition, NVOL by 0.41\% and NVOL with 4\% by 10.57\%. Both yield also a lower maximum incoming volume, improving METIS on by 1.37\% and 22.19\% respectively. 
 
-Although NVOL achieves a lower maximum per-partition volume (incoming and outgoing), its overall distribution is shifted upward: both the mean and the lighter partitions are larger than in METIS. Using the model estimate described in Section~\ref{sec:graph tools}, lighter partitions finish first and free up bandwidth for the larger partitions. METIS's many small partitions provides this relief, whereas NVOL's denser distribution keeps it contended for longer. As a result the heaviest partitions need to wait longer regardless of their own volume. Figures~\ref{fig:coPapers_p32distIn} and~\ref{fig:coPapers_p32dist} shows the clear difference in how the volume is distributed between METIS and NVOL. To make this distinction as clear we chose to display the volumes of NVOL with 4\% as it shows this behavior best. 
+Although NVOL achieves a lower maximum per-partition volume (incoming and outgoing), its overall distribution is shifted upward: both the mean and the lighter partitions are larger than in METIS. Using the model estimate described in Section~\ref{sec:graph tools}, lighter partitions finish first and free up bandwidth for the larger partitions. METIS's many small partitions provide this relief, whereas NVOL's denser distribution prolongs the contention longer. As a result the heaviest partitions need to wait longer regardless of their own volume. Figures~\ref{fig:coPapers_p32distIn} and~\ref{fig:coPapers_p32dist} show the clear difference in how the volume is distributed between METIS and NVOL. To make this distinction as clear as possible, we chose to display the volumes of NVOL with 4\% as it shows this behavior best. 
 
 \begin{figure}[h]
 	\centering
@@ -754,3 +765,51 @@ Although NVOL achieves a lower maximum per-partition volume (incoming and outgoi
 	\caption{Comparison of incoming volume of partitions in coPapersDBLP with $k=32$ for METIS and NVOL with 4\% imbalance}
 	\label{fig:coPapers_p32distIn}
 \end{figure}
+
+\subsection{italy\_osm graph estimate results}
+At first glance the results for this graph seem wrong. NVOL improves the max outgoing volume by 8.87\% and NVOL with 4\% imbalance by 26.61\%, yet their runtimes change by 0.1\% and $-27.8$\% respectively. The 4\% variant essentially loses on runtime by roughly the same margin it gains on volume. To understand why, we need to look beyond the maximum outgoing and incoming volumes.
+
+The estimates are produced using equation~\ref{eq:formula8}, which gives the runtime for partition $i$ as the time needed to send and receive its messages, plus the startup latency for each outgoing message. Table~\ref{tab:italyosm_stats} reports the relevant statistics for METIS and NVOL 4\% on italy\_osm with $k=32$. NVOL has lower values on every metric except the maximum number of neighboring partitions.
+
+\begin{table}[h]
+	\centering
+	\resizebox{\linewidth}{!}{
+		\begin{tabular}{|l|r|r|r|}
+			\hline
+			\textbf{Objective function}
+			& \textbf{Max outgoing vol.}
+			& \textbf{Max incoming vol.}
+			& \textbf{Max neighbor partitions}\\
+			\hline
+			METIS & 124 & 123 & 7\\
+			\hline
+			NVOL 4\% & 91 & 96 & 9\\
+			\hline
+	\end{tabular}}
+	\caption{Communication statistics for METIS and NVOL 4\% on italy\_osm with $k=32$.}
+	\label{tab:italyosm_stats}
+\end{table}
+
+Both partitionings have very low volumes overall, likely due to the sparse structure of road network graphs. This is reflected directly in the estimate: the largest $t^{\mathrm{recv}}$ value is $6.9 \cdot 10^{-7}$ for METIS and $5.58 \cdot 10^{-7}$ for NVOL. So far, the volume advantage of NVOL behaves as expected.
+
+The latency term, however, tells a different story. We use a latency constant of $3.8\,\mu s$, which by equation~\ref{eq:formula8} is multiplied by the number of neighboring partitions. This constant is already an order of magnitude larger than $t^{\mathrm{recv}}$, so once it is scaled by the neighbor count it dominates the estimate. NVOL has one partition with 9 neighbors and two with 8, all above METIS's maximum of 7, and these three partitions stand out as the
+slowest in figure~\ref{fig:italy_osm_timesNvol4}. Instead, Figure~\ref{fig:italy_osm_timesNvol4_notau}, show what the times would look like if we ignore the latency. Here it is clear that NVOL's wins on volume bring better times. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\linewidth]{pictures/italy_osm_timesNvol4}
+	\caption{Estimated runtimes per partition on italy\_osm $k=32$
+		for METIS and NVOL 4\%. The value after NVOL is the percentage
+		difference between the highest runtime for METIS and for NVOL.}
+	\label{fig:italy_osm_timesNvol4}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\linewidth]{pictures/italy_osm_timesNvol4_notau}
+	\caption{Estimated runtimes per partition on italy\_osm $k=32$
+		for METIS and NVOL 4\% when ignoring the latency. The value after NVOL is the percentage
+		difference between the highest runtime for METIS and for NVOL.}
+	\label{fig:italy_osm_timesNvol4_notau}
+\end{figure}
+
+This example illustrates that on graphs with very low communication volumes, latency can dominate the runtime estimate, and a partitioning that improves volume at the cost of more neighbors per partition may end up slower overall. The specific numbers here are tied to our setup, but the broader pattern, that latency matters more in low volume graphs, is general.
