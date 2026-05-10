@@ -3,7 +3,7 @@ This chapter outlines areas where the work in this thesis could be improved, alo
 
 %something something%
 
-\section{Improved efficiency}
+\section{Improved efficiency} \label{sec:Improved eff}
 One of METIS's main strengths is its partitioning speed, and the additional structures and operations introduced by NVOL inevitably affect this, particularly on larger graphs. For small graphs the partitioning time is essentially unchanged, but on larger ones NVOL was observed to be significantly slower than METIS running with the total communication volume objective.
 
 The overhead has a straightforward explanation: NVOL adds code to METIS's refinement stage and increases the number of iterations performed there. METIS itself is carefully designed to avoid redundant work, most of the volume operations are performed during graph projection. This way the refinement stage can reuse it rather than reiterating over the graph. NVOL breaks this pattern by recomputing the gain information for each vertex it visits during refinement, effectively repeating work that METIS already performs at projection time.

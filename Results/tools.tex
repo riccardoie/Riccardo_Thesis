@@ -4,7 +4,7 @@ This chapter presents the tools developed and used throughout this thesis to pro
 \section{METIS}
 For this thesis we used METIS as our multilevel $k$-way partitioner. The METIS framework is open source\footnote{\url{https://github.com/KarypisLab/METIS}}, developed by George Karypis, and widely used. We have also made public a version extended with NVOL\footnote{\url{https://github.com/riccardoie/METIS-with-NVOL}}. Most of the logic behind the multilevel $k$-way algorithm has already been covered in Chapters~\ref{chap:multilevel-kway}-\ref{chapter5}, so we refer the reader to those chapters.
 
-\subsection{Implementing NVOL}
+\subsection{Implementing NVOL} \
 Implementing NVOL required extending METIS's existing infrastructure. We first defined a new volume-based objective named NVOL. Because it is volume-based, NVOL reuses the coarsening and initial partitioning code of the total volume objective; our extensions are confined to the refinement stage.
 
 We added two new structs to METIS: one to carry per-partition information, and one for the refinement table. The \texttt{pinfo\_t} struct holds an integer representing a partition's outgoing volume, and METIS's main \texttt{graph\_t} struct now carries a pointer to it. At the start of refinement we allocate an array of $k$ \texttt{pinfo\_t} entries, one per partition, and update them throughout refinement to track partition-specific volumes. The second struct, \texttt{vol\_refinement\_table}, holds a pointer to an integer array; \texttt{graph\_t} instead stores a pointer to a \texttt{vol\_refinement\_table} struct, yielding effectively an array of \texttt{vol\_refinement\_table}. This forms the gain table described in Chapter~\ref{cv_calculation}.
