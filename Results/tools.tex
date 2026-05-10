@@ -1,4 +1,4 @@
-\chapter{NVOL tooling support}\label{chap:NVOL tooling}
+\chapter{METIS and Supporting Tooling}\label{chap:NVOL tooling}
 This chapter presents the tools developed and used throughout this thesis to produce the results in Chapter~\ref{chap:results}. The first section describes in detail how METIS was adapted to support NVOL, while the second section covers the tools used for data analysis and visualization.
 
 \section{METIS}
@@ -44,7 +44,7 @@ The remaining lines of the graph file describe the graph's connectivity: each li
 Once the algorithm terminates, METIS produces a partition file. This text file contains $n$ lines, where $n$ is the number of vertices in the graph, and each line holds a single integer in the range $[0, k-1]$ indicating the partition the corresponding vertex was assigned to. The partition files are name graphName.part.$k$, where $k$ is the number of partitions. 
 
 
-\section{Graph Tools}
+\section{Graph Tools} \label{sec:graph tools}
 In this section we will present a few simple tools that were developed during this thesis to display and analyze the results produced by the partitioning algorithm as well as graph formatting. The scripts can all be found in this public repository \footnote{\url{https://github.com/riccardoie/Graph-tools/tree/main}}.
 
 \subsection{calc\_partitions}

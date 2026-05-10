@@ -626,7 +626,7 @@ Table~\ref{tab:suitesparse_METISvsNVOL_4} shows the results on our Suite Sparse 
 
 Comparing the per-graph averages in Table~\ref{tab:suitesparse_NVOL_NVOL4_avg}, most rows shift very little, typically within $\pm 1\%$. The clearest exception is italy\_osm, whose average drops from $-0.96\%$ to $-7.83\%$. Best-case results improve on nearly every graph, usually by 1-3\%, with italy\_osm and hugetrace-00020 showing the largest single-run gains. The worst-case results, by contrast, deteriorate almost everywhere; only three graphs see an improvement at their worst tail: hugetric-00000, rgg\_n\_2\_23\_s0, and kmer\_V2a. The greatest deterioration occurs on italy\_osm, whose worst result collapses from $-21.21\%$ to $-59.78\%$. As in the Heart dataset, total volume and standard deviation differ only slightly between the two configurations.
 
-\begin{table}[h]
+\begin{table}[H]
 	%\begin{sidewaystable}
 	\centering
 	\begin{tabular}{|l|r|r|r|r|}
@@ -675,16 +675,82 @@ Unlike in the Heart dataset, graph size does not appear to drive the difference 
 The 4\% setting is therefore best treated as a per-graph tuning option rather than a default: it can yield better results in some cases, but with no clear predictor of when it helps and when it hurts.
 
 \section{Model estimates}
+Thus far we have evaluated how NVOL performs based on outgoing communication volume metrics, however the end goal of graph partitioning is to improve performances when running the partitions. In order to test if the lower volumes actually improved performances we used the model estimate described in Section~\ref{sec:graph tools}. We point out that this is simply a model, and not actual runtime, meaning that these values are an approximation that models very closely a real machine. 
 
-%Explain how things are evaluated
-%Look at results
-%	max partition vol in different graphs
-%	distribution of volume between partitions
-%	mpi using Xings model
+We test our graphs for a setup with 32 processors with a startup latency and a set of bandwidths we got sent by the authors of~\cite{Xing_of_Heterogeneous}. These values are taken from the bandwidths of an actual parallel computer and are not a universal set. The results would look different using another machine. Sadly we were not able to retrieve the bandwidth for a bigger machine in order to test some of our best results at higher $k$. 
 
+Since a parallel application is generally as slow as its slowest process, we start this evaluation by looking at this value first. On each graph we compare the slowest process rutime on METIS and NVOL and calculate the percentage difference. If we define the runtime as $R$, each value in the following table~\ref{tab:runtime_NVOL_NVOL_4} equals to $(R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$, where a positive value means that NVOL has a smaller runtime and vice versa. We check this value for both NVOL and NVOL with 4\% imbalance to default METIS with the total communication volume objective, all at $k=32$. 
+ 
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|r|r|}
+		\hline
+		\textbf{Graphs} 
+		& \textbf{$R_{\mathrm{NVOL}}$}
+		& \textbf{$R_{\mathrm{NVOL 4\%}}$}\\
+		\hline
+		heart01 & 0.0\% & 9.99\%\\
+		\hline
+		heart02 & 0.6\% & 0.2\%\\
+		\hline
+		heart03 & 1.1\% & -8.6\%\\
+		\hline
+		heart04 & -0.1\% & 6.3\%\\
+		\hline
+		heart05 & 0.4\% & 5.6\%\\
+		\hline
+		heart06 & 6.6\% & 6.6\%\\
+		\hline
+		heart07 & 3.2\% & 4.3\%\\
+		\hline
+		pa2010 & 0.2\% & -0.3\%\\ 
+		\hline
+		coPapersDBLP & -29.4\% & -17.97\%\\ 
+		\hline
+		packing-500x100x100-b050 & 6.5\% & 4.6\%\\ 
+		\hline
+		channel-500x100x100-b050 & 5.6\% & 5.7\%\\ 
+		\hline
+		hugetric-00000 & 2.8\% & 3.6\%\\
+		\hline
+		italy\_osm & 0.1\% & -27.8\%\\ 
+		\hline
+		hugetric-00020 & 2.0\% & -8.8\%\\ 
+		\hline
+		rgg\_n\_2\_23\_s0 & -1.0\% & -1.3\% \\
+		\hline
+		delaunay\_n23 & -0.9\% & -9.3\%\\
+		\hline
+		hugetrace-00020 & 2.6\% & -5.7\%\\
+		\hline
+		delaunay\_n24 & -6.1\% & 0.1\%\\
+		\hline
+		kmer\_V2a & -3.7\% & -2.9\%\\
+		\hline
+		kmer\_U1a & 2.2\% & 2.1\%\\ %2
+		\hline
+	\end{tabular}
+	\caption{Percentage difference for the slowest runtime of NVOL and NVOL 4\% compared to METIS (e.g. $(R_{\mathrm{METIS}} - R_{\mathrm{NVOL}})/ R_{\mathrm{METIS}}$).}	
+	\label{tab:runtime_NVOL_NVOL_4}
+\end{table}
 
-%presentere utgående volum først 
-% vinner NVOL? hvor mye, Taper NVOL? hvorfor? hvor mye? Er fordeling bra? std avvik
+Table~\ref{tab:runtime_NVOL_NVOL_4} shows how NVOL overall wins 60\% of the time. More specifically using the default imbalance it has 13 wins, one tie and 6 losses, while the 4\% imbalance runs have 11 wins and 9 losses. NVOL with 4\% maintains the same pattern of having a greater variance in its results with a greater span between best and worst results. Both approaches struggles greatly for coPapersDBLP yielding slower runtimes. The heart dataset and the numerical simulations have some good results. For default NVOL they are all positive, NVOL with 4\% records a few losses here too. 
 
-%nevne innkomende volum, metis velger det bort, pga av underlying metis structure harder to implement incoming volum 
-%mention here with plots that NVOL does not improve incoming volume 
+\subsection{coPapersDBLP graph estimate results}
+Compared to METIS, NVOL and NVOL with 4\% imbalance produce 29.4\% and 17.97\% slower runtimes respectively. Both have lower max outgoing volumes per partition, NVOL with 0.41\% better and NVOL with 4\% with 10.57\%. Both yield also a lower maximum incoming volume, improving METIS by 1.37\% and 22.19\% respsecitvely. 
+
+Although NVOL achieves a lower maximum per-partition volume (incoming and outgoing), its overall distribution is shifted upward: both the mean and the lighter partitions are larger than in METIS. Using the model estimate described in Section~\ref{sec:graph tools}, lighter partitions finish first and free up bandwidth for the larger partitions. METIS's many small partitions provides this relief, whereas NVOL's denser distribution keeps it contended for longer. As a result the heaviest partitions need to wait longer regardless of their own volume. Figures~\ref{fig:coPapers_p32distIn} and~\ref{fig:coPapers_p32dist} shows the clear difference in how the volume is distributed between METIS and NVOL. To make this distinction as clear we chose to display the volumes of NVOL with 4\% as it shows this behavior best. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/coPapers_p32dist}
+	\caption{Comparison of outgoing volume of partitions in coPapersDBLP with $k=32$ for METIS and NVOL with 4\% imbalance}
+	\label{fig:coPapers_p32dist}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{pictures/coPapers_p32distIn}
+	\caption{Comparison of incoming volume of partitions in coPapersDBLP with $k=32$ for METIS and NVOL with 4\% imbalance}
+	\label{fig:coPapers_p32distIn}
+\end{figure}

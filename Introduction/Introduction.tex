@@ -23,33 +23,33 @@ NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm.
 \section{Thesis Structure}
 \textbf{Chapter 2:} \textit{Background}
 \begin{quote}
-	Chapter 2 covers fundamental topics in graph partitioning.  It also presents some of the algorithms used today, along with the main application area where they are applied.	
+	Chapter 2 covers the fundamentals of graph partitioning. It surveys some of the algorithms in common use today, along with the main application areas in which they are applied.
 \end{quote}
-\textbf{Chapter 3:} \textit{Multilevel K-Way Graph Partitioning}
+\textbf{Chapter 3:} \textit{Multilevel $k$-Way Graph Partitioning}
 \begin{quote}
-	Chapter 3 discusses the multilevel $k$-way graph partitioning algorithm on which NVOL is built. This approach achieves a good balance between quality and runtime, making it a popular choice for large graphs. The chapter presents the standard version of the algorithm, which uses edge-cut as its objective. This formulation is simpler and easier to understand; the following chapters then extend the algorithm to support volume-based objectives such as NVOL.
+	Chapter 3 presents the multilevel $k$-way graph partitioning algorithm on which NVOL is built. This approach offers a good balance between partition quality and runtime, making it a popular choice for large graphs. The chapter focuses on the standard formulation, which uses edge-cut as its objective; the following chapters then extend the algorithm to support volume-based objectives such as NVOL.
 \end{quote}
 \textbf{Chapter 4:} \textit{Communication Volume Calculation}
 \begin{quote}
-	Chapter 4 explains how gain can be evaluated for volume based objectives. It discusses how both total communication volume and per-partition volume are calculated, beginning with formal definitions of the gain calculations, followed by some examples. The final sections describe how these calculations are integrated into the multilevel $k$-way algorithm.
+	Chapter 4 explains how gain is evaluated for volume-based objectives. It covers the calculation of both total communication volume and per-partition volume, beginning with formal definitions of the gain calculations and followed by worked examples. The final sections describe how these calculations are integrated into the multilevel $k$-way algorithm.
 \end{quote}
 \textbf{Chapter 5:} \textit{Refinement Using Communication Volume}
 \begin{quote}
-	Chapter 5 covers the refinement stage and explains how it is implemented for volume-based objectives. Building on Chapter 4, we show how the partitions can be refined using communication volume objectives. The total communication volume objective and NVOL are each treated in their own section, and both conclude with a simplified algorithm representing the implementation.
+	Chapter 5 covers the refinement stage and explains how it is implemented for volume-based objectives. Building on Chapter 4, it shows how partitions can be refined using communication volume objectives. The total communication volume objective and NVOL are each treated in their own section, and both conclude with a simplified algorithm representing the implementation.
 \end{quote}
-\textbf{Chapter 6:} \textit{NVOL tooling support}
-\begin{quote}	
-	Chapter 6 presents the tools used in this thesis to run and analyze the multilevel $k$-way partitioning algorithm with NVOL. It introduces METIS, the partitioning framework that NVOL extends, and describes its input and output formats. It then presents a small collection of Python scripts developed alongside this work for preprocessing input graphs and analyzing the per-partition communication volumes produced by our experiments.
+\textbf{Chapter 6:} \textit{METIS and Supporting Tooling}
+\begin{quote}
+	Chapter 6 presents the tools used in this thesis to run and analyze the multilevel $k$-way partitioning algorithm with NVOL. It introduces METIS, the partitioning framework that NVOL extends, and describes its input and output formats. It also presents a small collection of Python scripts developed alongside this work for preprocessing input graphs and analyzing the per-partition communication volumes produced by the experiments.
 \end{quote}
 \textbf{Chapter 7:} \textit{Results}
 \begin{quote}
-%	Chaper 7 goes through the results from running NVOL across different graphs and number of partitions. 
+	Chapter 7 presents the results of running NVOL across a variety of 	graphs and partition counts. It compares the partitions across multiple metrics and models the runtime of executing the partitions produced by NVOL and METIS.
 \end{quote}
 \textbf{Chapter 8:} \textit{Future Work}
 \begin{quote}
-	Chapter 8 presents directions for future work on this project. It discusses some of the current shortcomings and how they could be addressed, and introduces new ideas that would build naturally on the NVOL implementation. The goal of the latter being extending the logic when choosing vertex moves in the refinement stage, to form better partitions.
+	Chapter 8 presents directions for future work on this project. It discusses some of the current shortcomings and how they might be addressed, and introduces new ideas that would build naturally on the NVOL implementation. The goal of the latter is to extend the move-selection logic in the refinement stage in order to produce better partitions.
 \end{quote}
 \textbf{Chapter 9:} \textit{Conclusions}
 \begin{quote}
-	...
+	Chapter 9 concludes the thesis and evaluates the contributions of this project. It revisits the initial goals set out in Chapter 1 and discusses how well they have been fulfilled.
 \end{quote}
