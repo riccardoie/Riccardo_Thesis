@@ -53,7 +53,7 @@
 				\item[\refstepcounter{subproject}(\thesubproject)]
 		\end{description}}
 	
-\title{Rethinking Multilevel K-Way Graph Partitioning using an Objective Function that Considers the Distribution of Communication volume}        %% ... or whatever
+\title{Rethinking Multilevel K-Way Graph Partitioning using an Objective Function that Considers the Distribution of Communication Volume}        %% ... or whatever
 %\subtitle{Any short subtitle}         %% ... if any
 \author{Riccardo Ieva}                      %% ... or whoever 
 
@@ -72,8 +72,14 @@
 	
 	The service Claude, developed by Anthropic, has been used to improve the content of the thesis. A first version of the work was pasted in its entirety, and the model was given the prompt "Fix my grammar in this master thesis". The text was then iterated a few times through the model where new prompts were used to get the correct structure of the text. The final result was partially cut out, fact-checked, and mostly rewritten by the author.
 	
-	\begin{abstract}
-		Here come 3--6 sentences describing your thesis.
+	\begin{abstract}		
+	Parallel applications are an increasingly important area of development. The goal of graph partitioners is to distribute the load equally across the parallel computer to improve runtime. Generally speaking, a parallel application is as slow as its slowest process, suggesting that improving the most heavily loaded partition would yield runtime gains.
+	
+	Most partitioners base their objective functions on global terms like total communication volume, which in turn may leave individual partitions with disproportionately large volume loads. We present NVOL, a new implementation of a partition-aware objective function within the METIS framework. NVOL examines each partition's outgoing communication volume and performs only those moves that do not increase the maximum outgoing communication volume.
+	
+	We evaluate NVOL against METIS's own total communication volume objective function across 20 graphs from two datasets - a set of cardiac finite-element matrices and a selection from the SuiteSparse Matrix Collection - with each graph partitioned into 2 to 2048 parts. Across all runs, NVOL produces a lower maximum outgoing communication volume than METIS's volume objective function in 89\% of the SuiteSparse runs (mean improvement 9.2\%, peak 56.7\%) and 93\% of the cardiac finite-element runs (mean 4.7\%, peak 17.6\%), while also producing more evenly distributed partition volumes overall. On a runtime model parameterized by real machine bandwidths, NVOL yields the lowest slowest-process time in 65\% of cases.
+	
+	NVOL shows strong potential and solid results. The increased complexity of the objective function comes at the cost of partitioning time, averaging 7–11× slower than METIS running the total volume objective function. NVOL shows the most promise on numerical simulation graphs, and good potential for citation networks when partitioned into a sufficiently large number of parts. It also shows good potential for improving the runtime of the slowest process of a parallel application. 
 	\end{abstract}
 
 	\begin{preface}
@@ -108,10 +114,8 @@
 	\include{Project/vertex_choice}
 	\include{Results/tools}
 	\include{Results/results}
-	\include{Conclusions/future_work}
-	\chapter{Conclusions}                     
+	\include{Conclusions/future_work}                   
 	\backmatter{}
 	\printbibliography
 %	\appendix
-%	\include{Results/tmp}
 \end{document}
