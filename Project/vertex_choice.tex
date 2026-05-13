@@ -1,34 +1,39 @@
-\chapter{Refinement Using Communication Volume} \label{chapter5}
-This chapter will discuss how the actual refinement is performed. Using the gains calculated in the previous chapter, we will explain how a vertex move is decided. This chapter will also compare how the choice is made using a total communication volume objective function (VOL) and the partition-aware communication volume used in NVOL.
+\chapter{Greedy Refinement Using Communication Volume} \label{chapter5}
+This chapter discusses how Greedy Refinement (GR) works using the total communication volume objective function (VOL) and our partition-aware communication volume objective function NVOL. While the GR algorithm itself is well-established and used by partitioners such as METIS, its integration with NVOL is a contribution of this work. Building on the gain calculations from Chapter~\ref{cv_calculation}, we show how GR uses these gains to decide which vertex moves to perform.
 
-\section{Refinement using VOL}\label{sec:METIS refinement}
-After the preparation phase is completed, refinement starts and the partitioner visits all the vertices in the boundary set. For each vertex $i$, all the neighboring partitions of $i$ are visited, checking the values of the $G_i$ vector. A vertex move is chosen if it improves the total communication volume while maintaining the weight constraints, just like for GR in Section~\ref{sec:greedy_refinement}. The refinement algorithm will look for the move with the highest value in $G_i$ that is allowed by the balance constraints. To prioritize high gain moves, METIS relaxes the balance constraint in proportion to the gain. Using a constant, called the fudge factor $f$, a move to partition $p$ is allowed to exceed the maximum partition weight by $f\cdot G_i[p]$. This allows moves that improve the communication volume significantly at the cost of a few extra vertices in a partition.
+The first section presents the logic used for GR with VOL, the standard communication volume objective function used by partitioners such as METIS. The second section describes how GR works with NVOL. Each section concludes with an algorithm summarizing how GR evaluates vertex moves under the corresponding objective.
 
-When two moves have the same gain, METIS breaks ties using two further criteria: external degree and partition balance. In the case of a tie, it first chooses the move with the highest specific external degree (see Section~\ref{sec:preparation for refinement}). Since all vertices within a coarse vertex are assigned to the same partition upon projection, a move toward a partition with high external degree may reduce volume at finer levels. If instead two candidates have the same gain and the same external degree, the move to the more underweight partition is chosen.
+\section{GR with VOL}\label{sec:METIS refinement}
+In this section, we describe how GR works when using VOL as the objective function. The goal of VOL is to minimize the total communication volume of the graph. After the preparation phase is completed, refinement starts: using GR, the partitioner visits all the vertices in the boundary set.  
 
-Consider a vertex $i$ being visited in the boundary set during refinement. Algorithm~\ref{alg:ref_vol} shows how METIS chooses vertex moves using the logic described above.
+For each boundary vertex $i$, all the neighboring partitions $N_i$ are visited, checking the corresponding value in the $G_i$ vector. A vertex move is only considered if removing $i$ from its current partition does not violate the minimum partition weight. Among all considered moves, GR selects the one with the highest gain in $G_i$ that is allowed by the balance constraints, i.e., the move that reduces the total communication volume the most. To prioritize high-gain moves, METIS relaxes the balance constraint in proportion to the gain. Using a constant called the fudge factor $f$, a move to partition $p$ is allowed to exceed the maximum partition weight by $f\cdot G_i[p]$. This allows moves that improve the communication volume significantly, at the cost of a few extra vertices in a partition.
+
+When two moves have the same gain, METIS breaks ties using two further criteria: external degree (see Section~\ref{sec:preparation for refinement}) and partition balance. It first chooses the move with the highest specific external degree. Since all vertices within a coarse vertex are assigned to the same partition upon projection (see Section~\ref{sec:preparation for refinement}), a move toward a partition with high external degree may reduce volume at finer levels. If instead two candidates have the same gain and the same external degree, the move to the more underweight partition is chosen. This improves the weight balance among the partitions. Algorithm~\ref{alg:ref_vol} shows the logic GR with VOL applies to each boundary vertex $i$. 
+
 \begin{algorithm}[H]
-	\caption{VOL refinement}\label{alg:ref_vol}
+	\caption{GR with VOL}\label{alg:ref_vol}
 	\begin{algorithmic}
-		\Require Vertex $i$ with neighbor partitions $N_i[0 \ldots n{-}1]$
+		\State \textbf{Input:} boundary vertex $i$ under consideration, with neighbor partitions $N_i[0 \ldots n{-}1]$
+		\State \Comment{$N_i[k]$ denotes the $k$-th neighbor partition of $i$}
 		\If{$w(P[i]) - w(i) \geq W^{\min}$}
 		\For{$k = n{-}1$ \textbf{downto} $0$}  \Comment{Find first feasible candidate}
-		\If{$G_i[N_i[k]] \geq 0$ \textbf{AND}\\
+		\If{$G_i[N_i[k]] \geq 0$ \textbf{AND}\\	
 			\hspace*{4.1em}$w(N_i[k]) + w(i) \leq W^{\max} + f \cdot G_i[N_i[k]]$}
 		\State \textbf{break}
 		\EndIf
 		\EndFor
-		\If{$k < 0$} \textbf{continue to next vertex} \EndIf
+		\If{$k < 0$} \textbf{continue} \Comment{Go to next vertex, no feasible candidate} \EndIf
+		
 		\For{$j = k{-}1$ \textbf{downto} $0$}  \Comment{Search for a better candidate}
 		\State $p_j \gets N_i[j],\; p_k \gets N_i[k]$
-		\If{$G_i(p_j) > G_i(p_k)$ \textbf{AND} \\
-			\hspace*{4.1em}$w(p_j) + w(i) \leq W^{\max} + f \cdot (G_i(p_j))$}
+		\If{$G_i[p_j] > G_i[p_k]$ \textbf{AND} \\
+			\hspace*{4.1em}$w(p_j) + w(i) \leq W^{\max} + f \cdot G_i[p_j]$}
 		\State $k \gets j$ \Comment{Better gain, relaxed balance}
-		\ElsIf{$G_i(p_j) = G_i(p_k)$ \textbf{AND}\\
+		\ElsIf{$G_i[p_j] = G_i[p_k]$ \textbf{AND}\\
 			\hspace*{6.3em}$ED_{p_j}[i] > ED_{p_k}[i]$ \textbf{AND}\\
 			\hspace*{6.3em}$w(p_j) + w(i) \leq W^{\max}$}
 		\State $k \gets j$ \Comment{Same gain, better connectivity}
-		\ElsIf{$G_i(p_j) = G_i(p_k)$ \textbf{AND} \\
+		\ElsIf{$G_i[p_j] = G_i[p_k]$ \textbf{AND} \\
 			\hspace*{6.3em}$ED_{p_j}[i] = ED_{p_k}[i]$ \textbf{AND} \\
 			\hspace*{6.3em}$w(p_j) < w(p_k)$}
 		\State $k \gets j$ \Comment{All else equal, prefer underloaded partition}
@@ -39,74 +44,71 @@ Consider a vertex $i$ being visited in the boundary set during refinement. Algor
 	\end{algorithmic}
 \end{algorithm}
 
-\section{Refinement using partition-specific communication volume}\label{sec:NVOL refinement}
-We now describe how refinement is performed using the partition-specific communication volume objective function in NVOL. In Section~\ref{sec:partition specific gain imp} we explained how, for a boundary vertex $i$, the gain table $SG_i$ is computed. To briefly recall, each entry $SG_i[p][j]$ records the change in outgoing communication volume that partition $p$ would experience if vertex $i$ were moved to neighboring partition $j$. The rows of the table correspond to affected partitions, while the columns correspond to possible destinations. The goal of NVOL is to minimize the maximum outgoing communication volume ($MV^{\mathrm{max}}$) held by any single partition.
+\section{GR with NVOL}\label{sec:NVOL refinement}
+While GR itself follows the same overall patter as the VOL variant described above, its adaptation to NVOL is a contribution of this work. The goal of NVOL is to minimize the maximum outgoing communication volume ($MV^{\mathrm{max}}$) held by any single partition. In Section~\ref{Partition specific gain calculation}, we explained how the gain table $SG_i$ is computed for a boundary vertex $i$. To briefly recall, each entry $SG_i[p][j]$ records the change in outgoing communication volume that partition $p$ would experience if vertex $i$ were moved to the neighboring partition $j$. The rows of the table correspond to affected partitions, while the columns correspond to possible destinations. 
 
-\subsection{Move selection}
-During refinement, NVOL evaluates every candidate destination for a boundary vertex by inspecting the gain table. For each potential move of vertex $i$ to a destination partition $j$, NVOL determines what the highest volume among all affected partitions would be after the move. If any partition would exceed the current global $MV^{\mathrm{max}}$, the highest volume held by any partition in the entire graph, the move is immediately discarded. As with VOL, NVOL also enforces partition weight constraints: any move must keep the destination partition's weight within the allowed bounds.
+The GR algorithm follows the same pattern as before. For each boundary vertex $i$, all the neighboring partitions $N_i$ are visited, checking the corresponding values of the $SG_i$ table. Here too, moves are only considered if removing $i$ from its current partition does not violate the minimum partition weight. As with VOL, NVOL also enforces partition max weight constraints: any move must keep the destination partition's weight within the allowed bounds. For a potential move to a destination partition $j$, NVOL computes the highest volume that any affected partition would hold after the move. If any partition exceeds the current global $MV^{\mathrm{max}}$, the move is immediately discarded. 
 
-NVOL ranks candidate moves according to three criteria, applied in the following order of priority: local $MV^{\mathrm{max}}$, external degree and balance. The first criterion seeks a move that minimizes the local top volume. Out of all the affected partitions, NVOL will choose the move that decreases the top volume of these partitions the most, as long as that top volume is lower than the global $MV^{\mathrm{max}}$. The second criterion is used when two moves have the same local top volume. As a tiebreaker, NVOL favors destinations toward which the considered vertex has a high external degree. This follows the same logic as VOL, aiding moves where the vertex is strongly connected. The final criterion is used when the previous two are tied. NVOL prefers moving vertices to lighter partitions to better balance the weight distribution between the partitions.
+NVOL will look first for a candidate move that does not increase the global $MV^{\mathrm{max}}$. As is further discussed in Section~\ref{sec:encourage more moves}, this might lead to an increase in local $MV^{\mathrm{max}}$. After the first candidate has been found, NVOL looks for a better option ranked according to three criteria, applied in the following order of priority: local $MV^{\mathrm{max}}$, external degree, and balance. Under the first criterion, NVOL seeks a move that minimizes the local top volume. Among the possible destinations, NVOL chooses the destination $j$ that results in the lowest top volume across the remaining affected partitions, provided that this is lower than the previous candidate. When two moves have the same local top volume, NVOL favors destinations toward which vertex $i$ has a high external degree as a tiebreaker. This tiebreaker follows the same logic as in VOL: it favors moves where the vertex is strongly connected to the destination partition. The final criterion is used when the previous two are tied. NVOL prefers moving vertices to lighter partitions, improving the weight distribution among the partitions. 
 
-\subsection{Encouraging more moves}
-A deliberate design choice in NVOL was to promote many vertex moves. Especially when choosing the first candidate, NVOL does not require an immediate improvement of the local top volume. Instead, it chooses any move that leads to a local top that is below the global maximum. This means that in practice NVOL might choose moves that increase the local top volume as long as it is below the global maximum.
+Just like VOL, NVOL uses the fudge factor to influence the weight constraint; however, it is used slightly differently. Section~\ref{sec:encourage more moves} explains how the fudge factor is exploited by NVOL to promote and prohibit moves at the same time. 
 
-The goal with this design is to increase the number of moves NVOL performs during a refinement stage. During testing, we experimented with a stricter criterion that required every accepted move to improve the local top volume. Under this stricter rule, significantly fewer vertices were moved during refinement. On average, the stricter rule performed half as many moves as the more relaxed approach. By encouraging more moves, we encountered two effects. First, NVOL was able to explore more solutions: since more moves were performed, more setups were evaluated. Second, we increased the chance of avoiding getting stuck in a local maximum. If no move could possibly improve the partition's volume, it would remain stuck; by allowing a ``worsening'' move, we increase the chance of finding better solutions. Since the condition still guarantees that the global maximum is never exceeded, the objective's value is protected throughout the process.
+Algorithm~\ref{alg:ref_nvol} shows how GR chooses a vertex move using NVOL. The algorithm consists of a main loop iterating over all possible destinations of the boundary vertex. In an inner loop, it computes the highest volume after the move. To do this, it scans all entries $SG_i[k][j]$ for $k \in N_i \cup \{P[i]\}$ and computes $PV[k] + SG_i[k][j]$, where $PV[k]$ is the volume partition $k$ holds before the move. We include $P[i]$ in the loop to also record how the source partition is affected by the move. The partition achieving the highest post-move volume is recorded as the local top partition, with volume \texttt{tmpVol} and partition id \texttt{tmpPid}. The remaining if-else branches encode the three ranking criteria described above. At the end, if a candidate has been found, the move is performed.
 
-To prevent this relaxed condition from accepting moves that are too damaging, NVOL incorporates the fudge factor as a safety mechanism. The fudge factor is used to adjust the maximum allowed partition weight; however, in NVOL we multiply it by the gain for the top partition. Specifically, for a vertex $i$, a partition $m$ with the highest local volume, and a destination partition $j$, we multiply the fudge factor by $SG_i[m][j]$. This ensures that moves that have a negative impact on the local top partition are more likely to be filtered out by the weight constraint. By making the maximum allowed weight smaller, it gets harder to accept a move. In the opposite case, it works as a relaxing factor, allowing moves that positively improve the local top. In this way, $f$ acts as a soft penalty that discourages harmful moves without outright forbidding all non-improving ones. In contrast to VOL, this is used for all criteria other than balance.
-\subsection{Implementation of refinement}
-For a boundary vertex $i$, NVOL iterates over the neighboring partitions $N_i$. For each candidate destination $j$, it first determines which of the affected partitions would hold the highest volume after the move. In order to do that, it scans all entries $SG_i[k][j]$ for $k \in N_i$ and computes $PV[k] + SG_i[k][j]$, where $PV[k]$ is the volume partition $k$ holds before the move. The partition achieving the highest post-move volume is recorded as the local top partition, with volume tmpVol and partition id tmpPid.
-
-If no candidate has been found yet, NVOL applies the relaxed first condition: destination $j$ is accepted as a candidate if tmpVol does not exceed the global $MV^{\mathrm{max}}$, and the weight constraint $w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\text{tmpPid}][j]$ is satisfied.
-
-Once a first candidate has been found, NVOL tries to find a better destination. A candidate is replaced if the new destination leads to a lower local top volume, using the same weight constraint as above. In the case of a tie, destinations with high external degree $ED_j[i]$ are preferred. If both local top volume and external degree are tied, the destination with the lower current weight is chosen, favoring underloaded partitions. After all neighboring partitions have been considered, vertex $i$ is moved to the final selected destination. The full procedure is given in Algorithm~\ref{alg:ref_nvol}.
 \begin{algorithm}[h]
-	\caption{NVOL refinement}\label{alg:ref_nvol}
+	\caption{GR with NVOL}\label{alg:ref_nvol}
 	\begin{algorithmic}
-		\Require Vertex $i$ with neighbor partitions $N_i[0 \ldots n{-}1]$; Max partition volume $MV^{\mathrm{max}}$
+		\State \textbf{Input:} boundary vertex $i$ under consideration, with neighbor partitions $N_i[0 \ldots n{-}1]$, global maximum partition volume $MV^{\mathrm{max}}$
 		\If{$w(P[i]) - w(i) \geq W^{\min}$}
-		\State candidateVol $\gets -1 $
-		\State destination $\gets -1 $
-		\ForAll{$j \in N_i$}
-		%		\State $p_j \gets N_i[j]$
-		\State tmpVol $\gets 0$
-		\State tmpPid $\gets -1$
-		%		\State gain $\gets 0$
-		\ForAll{$k \in N_i$}
-		%			\State $p_k \gets N_i[k]$
-			\If{tmpVol$< PV[k] + SG_i[k][j]$}
-				\State tmpVol $\gets PV[k] + SG_i[k][j]$
-				\State tmpPid $\gets k$
-		\EndIf
-		%			\State gain $\mathrm{+}= SG_i[p_k][p_j]$
-		\EndFor
-		\If{candidateVol = -1 \textbf{AND}\\
-			\hspace*{4.1em}$MV^{\mathrm{max}} \geq$ tmpVol \textbf{AND} \\
-			\hspace*{4.1em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
-		\State destination $\gets j$ \Comment{Move does not increase max partition volume}
-		\State candidateVol $\gets$ tmpVol
-		
-		\ElsIf{candidateVol != -1 \textbf{AND}\\
-			\hspace*{6.3em}candidateVol > tmpVol \textbf{AND}\\
-			\hspace*{6.3em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
-		\State destination $\gets j$ \Comment{Lower local max partition volume after move}
-		\State candidateVol $\gets$ tmpVol
-		
-		\ElsIf{candidateVol != -1 \textbf{AND}\\
-			\hspace*{6.3em}candidateVol = tmpVol \textbf{AND}\\
-			\hspace*{6.3em}$ED_{j}[i] > ED_{\mathrm{destination}}[i]$ \textbf{AND}\\
-			\hspace*{6.3em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
-		\State destination $\gets j$ \Comment{Same gain, better connectivity}
-		\State candidateVol $\gets$ tmpVol
-		
-		\ElsIf{candidateVol != -1 \textbf{AND}\\
-			\hspace*{6.3em} candidateVol = tmpVol \textbf{AND} \\
-			\hspace*{6.3em}$ED_{j}[i] = ED_{\mathrm{destination}}[i]$ \textbf{AND} \\
-			\hspace*{6.3em}$w(j) < w(\mathrm{destination})$}
-		\State destination $\gets j$	\Comment{All else equal, prefer underloaded partition}
-		\State candidateVol $\gets$ tmpVol
-		\EndIf
-		\EndFor
-		\State Move $i$ to destination
-		\EndIf
+			\State candidateVol $\gets -1 $
+			\State destination $\gets -1 $
+			\State Compute gain table $SG_i$
+			\ForAll{$j \in N_i$}
+				\State tmpVol $\gets 0$
+				\State tmpPid $\gets -1$
+				\ForAll{$k \in N_i \cup P[i]$}
+					\If{tmpVol$< PV[k] + SG_i[k][j]$}
+						\State tmpVol $\gets PV[k] + SG_i[k][j]$
+						\State tmpPid $\gets k$
+					\EndIf
+				\EndFor
+				\If{candidateVol = -1 \textbf{AND}\\
+				\hspace*{4.1em}$MV^{\mathrm{max}} \geq$ tmpVol \textbf{AND} \\
+				\hspace*{4.1em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
+					\State destination $\gets j$ 						\Comment{Move does not increase $MV^{\mathrm{max}}$}
+					\State candidateVol $\gets$ tmpVol
+			
+				\ElsIf{candidateVol $\neq -1$ \textbf{AND}\\
+				\hspace*{6.3em}candidateVol > tmpVol \textbf{AND}\\
+				\hspace*{6.3em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
+					\State destination $\gets j$ 						\Comment{Lower local max partition volume after move}
+					\State candidateVol $\gets$ tmpVol
+			
+				\ElsIf{candidateVol $\neq -1$ \textbf{AND}\\
+				\hspace*{6.3em}candidateVol = tmpVol \textbf{AND}\\
+				\hspace*{6.3em}$ED_{j}[i] > ED_{\mathrm{destination}}[i]$ \textbf{AND}\\
+				\hspace*{6.3em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
+					\State destination $\gets j$ 						\Comment{Same gain, better connectivity}
+					\State candidateVol $\gets$ tmpVol
+			
+				\ElsIf{candidateVol $\neq -1$ \textbf{AND}\\
+				\hspace*{6.3em} candidateVol = tmpVol \textbf{AND} \\
+				\hspace*{6.3em}$ED_{j}[i] = ED_{\mathrm{destination}}[i]$ \textbf{AND} \\
+				\hspace*{6.3em}$w(j) < w(\mathrm{destination})$}
+					\State destination $\gets j$						\Comment{All else equal, prefer underloaded partition}
+					\State candidateVol $\gets$ tmpVol
+				\EndIf
+			\EndFor
+			\If{destination $\neq -1$}									\Comment{Make sure a candidate has been found}
+				\State Move $i$ to destination
+			\EndIf
+	\EndIf
 	\end{algorithmic}
 \end{algorithm}
+
+\subsection{Encouraging more moves}\label{sec:encourage more moves}
+A deliberate design choice in NVOL was to promote a higher number of vertex moves. Especially when choosing the first candidate, NVOL does not require an immediate improvement of the local top volume. Instead, it chooses any move that leads to a local top below the global maximum. This means that in practice NVOL also chooses moves that increase the local top volume as long as it remains below the global maximum.
+
+The goal of this design is to increase the number of moves NVOL performs during a refinement stage. During testing, we experimented with a stricter criterion that required every accepted move to improve the local top volume. Under this stricter rule, significantly fewer vertices were moved during refinement. On average, the stricter rule performed half as many moves as the more relaxed approach. By encouraging more moves, we observed two effects. First, NVOL was able to explore more solutions: since more moves were performed, more configurations were evaluated. Second, we increased the chance of avoiding getting stuck in a local maximum. If no move could improve the partition's volume, GR would remain stuck, unable to find an improving move. By allowing a ``worsening'' move, we increase the chance of finding better solutions. Since the condition still guarantees that the global maximum is never exceeded, the objective function's value is protected throughout the process.
+
+To prevent this relaxed condition from accepting moves that are too damaging, NVOL incorporates the fudge factor as a safety mechanism. The fudge factor is used to adjust the maximum allowed partition weight; however, in NVOL we multiply it by the gain for the top partition. Specifically, for a vertex $i$, the partition $m$ with the highest local volume, and a destination partition $j$, we multiply the fudge factor by $SG_i[m][j]$. This ensures that moves with a negative impact on the local top partition are more likely to be filtered out by the weight constraint. By making the maximum allowed weight smaller, it becomes harder to accept a move. In the opposite case, it acts as a relaxing factor, allowing moves that improve the local top. In this way, $f$ acts as a soft penalty that discourages harmful moves and promotes positive ones.
