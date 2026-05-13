@@ -40,12 +40,12 @@ Consider a vertex $i$ being visited in the boundary set during refinement. Algor
 \end{algorithm}
 
 \section{Refinement using partition-specific communication volume}\label{sec:NVOL refinement}
-We now describe how refinement is performed using the partition-specific communication volume objective function in NVOL. In Section~\ref{sec:partition specific gain imp} we explained how, for a boundary vertex $i$, the gain table $SG_i$ is computed. To briefly recall, each entry $SG_i[p][j]$ records the change in outgoing communication volume that partition $p$ would experience if vertex $i$ were moved to neighboring partition $j$. The rows of the table correspond to affected partitions, while the columns correspond to possible destinations. The goal of NVOL is to minimize the maximum outgoing communication volume ($W^{\mathrm{max}}$) held by any single partition.
+We now describe how refinement is performed using the partition-specific communication volume objective function in NVOL. In Section~\ref{sec:partition specific gain imp} we explained how, for a boundary vertex $i$, the gain table $SG_i$ is computed. To briefly recall, each entry $SG_i[p][j]$ records the change in outgoing communication volume that partition $p$ would experience if vertex $i$ were moved to neighboring partition $j$. The rows of the table correspond to affected partitions, while the columns correspond to possible destinations. The goal of NVOL is to minimize the maximum outgoing communication volume ($MV^{\mathrm{max}}$) held by any single partition.
 
 \subsection{Move selection}
-During refinement, NVOL evaluates every candidate destination for a boundary vertex by inspecting the gain table. For each potential move of vertex $i$ to a destination partition $j$, NVOL determines what the highest volume among all affected partitions would be after the move. If any partition would exceed the current global $W^{\mathrm{max}}$, the highest volume held by any partition in the entire graph, the move is immediately discarded. As with VOL, NVOL also enforces partition weight constraints: any move must keep the destination partition's weight within the allowed bounds.
+During refinement, NVOL evaluates every candidate destination for a boundary vertex by inspecting the gain table. For each potential move of vertex $i$ to a destination partition $j$, NVOL determines what the highest volume among all affected partitions would be after the move. If any partition would exceed the current global $MV^{\mathrm{max}}$, the highest volume held by any partition in the entire graph, the move is immediately discarded. As with VOL, NVOL also enforces partition weight constraints: any move must keep the destination partition's weight within the allowed bounds.
 
-NVOL ranks candidate moves according to three criteria, applied in the following order of priority: local $W^{\mathrm{max}}$, external degree and balance. The first criterion seeks a move that minimizes the local top volume. Out of all the affected partitions, NVOL will choose the move that decreases the top volume of these partitions the most, as long as that top volume is lower than the global $W^{\mathrm{max}}$. The second criterion is used when two moves have the same local top volume. As a tiebreaker, NVOL favors destinations toward which the considered vertex has a high external degree. This follows the same logic as VOL, aiding moves where the vertex is strongly connected. The final criterion is used when the previous two are tied. NVOL prefers moving vertices to lighter partitions to better balance the weight distribution between the partitions.
+NVOL ranks candidate moves according to three criteria, applied in the following order of priority: local $MV^{\mathrm{max}}$, external degree and balance. The first criterion seeks a move that minimizes the local top volume. Out of all the affected partitions, NVOL will choose the move that decreases the top volume of these partitions the most, as long as that top volume is lower than the global $MV^{\mathrm{max}}$. The second criterion is used when two moves have the same local top volume. As a tiebreaker, NVOL favors destinations toward which the considered vertex has a high external degree. This follows the same logic as VOL, aiding moves where the vertex is strongly connected. The final criterion is used when the previous two are tied. NVOL prefers moving vertices to lighter partitions to better balance the weight distribution between the partitions.
 
 \subsection{Encouraging more moves}
 A deliberate design choice in NVOL was to promote many vertex moves. Especially when choosing the first candidate, NVOL does not require an immediate improvement of the local top volume. Instead, it chooses any move that leads to a local top that is below the global maximum. This means that in practice NVOL might choose moves that increase the local top volume as long as it is below the global maximum.
@@ -56,13 +56,13 @@ To prevent this relaxed condition from accepting moves that are too damaging, NV
 \subsection{Implementation of refinement}
 For a boundary vertex $i$, NVOL iterates over the neighboring partitions $N_i$. For each candidate destination $j$, it first determines which of the affected partitions would hold the highest volume after the move. In order to do that, it scans all entries $SG_i[k][j]$ for $k \in N_i$ and computes $PV[k] + SG_i[k][j]$, where $PV[k]$ is the volume partition $k$ holds before the move. The partition achieving the highest post-move volume is recorded as the local top partition, with volume tmpVol and partition id tmpPid.
 
-If no candidate has been found yet, NVOL applies the relaxed first condition: destination $j$ is accepted as a candidate if tmpVol does not exceed the global $W^{\mathrm{max}}$, and the weight constraint $w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\text{tmpPid}][j]$ is satisfied.
+If no candidate has been found yet, NVOL applies the relaxed first condition: destination $j$ is accepted as a candidate if tmpVol does not exceed the global $MV^{\mathrm{max}}$, and the weight constraint $w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\text{tmpPid}][j]$ is satisfied.
 
 Once a first candidate has been found, NVOL tries to find a better destination. A candidate is replaced if the new destination leads to a lower local top volume, using the same weight constraint as above. In the case of a tie, destinations with high external degree $ED_j[i]$ are preferred. If both local top volume and external degree are tied, the destination with the lower current weight is chosen, favoring underloaded partitions. After all neighboring partitions have been considered, vertex $i$ is moved to the final selected destination. The full procedure is given in Algorithm~\ref{alg:ref_nvol}.
 \begin{algorithm}[h]
 	\caption{NVOL refinement}\label{alg:ref_nvol}
 	\begin{algorithmic}
-		\Require Vertex $i$ with neighbor partitions $N_i[0 \ldots n{-}1]$; Max partition volume $W^{\mathrm{max}}$
+		\Require Vertex $i$ with neighbor partitions $N_i[0 \ldots n{-}1]$; Max partition volume $MV^{\mathrm{max}}$
 		\If{$w(P[i]) - w(i) \geq W^{\min}$}
 		\State candidateVol $\gets -1 $
 		\State destination $\gets -1 $
@@ -80,7 +80,7 @@ Once a first candidate has been found, NVOL tries to find a better destination. 
 		%			\State gain $\mathrm{+}= SG_i[p_k][p_j]$
 		\EndFor
 		\If{candidateVol = -1 \textbf{AND}\\
-			\hspace*{4.1em}$W^{\mathrm{max}} \geq$ tmpVol \textbf{AND} \\
+			\hspace*{4.1em}$MV^{\mathrm{max}} \geq$ tmpVol \textbf{AND} \\
 			\hspace*{4.1em}$w(j) + w(i) \leq W^{\max} + f \cdot SG_i[\mathrm{tmpPid}][j]$}
 		\State destination $\gets j$ \Comment{Move does not increase max partition volume}
 		\State candidateVol $\gets$ tmpVol

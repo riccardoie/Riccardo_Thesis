@@ -81,7 +81,7 @@ Note that rgg\_n\_2\_23\_s0 and packing-500x100x100-b050 have a minimum degree o
 \section{Maximum outgoing volume per partition}
 Using the graphs listed above, we ran METIS with two objective functions: NVOL (see Section~\ref{sec:NVOL refinement}) and VOL (see Section~\ref{sec:METIS refinement}). For each run we then used \texttt{calc\_partitions} to analyze the resulting partitions and compare their outgoing volumes. We partitioned the graphs into 2 to 2048 partitions; however, due to their size, not all graphs were partitioned up to 2048.
 
-The following sections will go through the results from each dataset, specifically comparing the maximum outgoing partition volume ($W^{\mathrm{max}}$) between VOL and NVOL. $W^{\mathrm{max}}$ represents the single highest outgoing volume of any partition in a partitioned graph. Using $W^{\mathrm{max}}_{\mathrm{VOL}}$ as the baseline, we report each value as the percentage difference of $W^{\mathrm{max}}_{\mathrm{NVOL}}$ relative to $W^{\mathrm{max}}_{\mathrm{VOL}}$, $(W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells are color-coded for readability: blue indicates that NVOL achieves a lower maximum (better), while orange indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions. Some cells are marked with N/A, which simply means that the graph was too small for that number of partitions ($k$), cells marked N/R indicate runs that did not finish discussed further in Section~\ref{sec:kmer}.
+The following sections will go through the results from each dataset, specifically comparing the maximum outgoing partition volume ($MV^{\mathrm{max}}$) between VOL and NVOL. $MV^{\mathrm{max}}$ represents the single highest outgoing volume of any partition in a partitioned graph. Using $MV^{\mathrm{max}}_{\mathrm{VOL}}$ as the baseline, we report each value as the percentage difference of $MV^{\mathrm{max}}_{\mathrm{NVOL}}$ relative to $MV^{\mathrm{max}}_{\mathrm{VOL}}$, $(MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells are color-coded for readability: blue indicates that NVOL achieves a lower maximum (better), while orange indicates a higher maximum (worse). Shading intensity reflects the magnitude of the difference, with darker shades marking larger improvements or regressions. Some cells are marked with N/A, which simply means that the graph was too small for that number of partitions ($k$), cells marked N/R indicate runs that did not finish discussed further in Section~\ref{sec:kmer}.
 
 \subsection{Heart dataset}
 \begin{table}[h]
@@ -117,13 +117,13 @@ The following sections will go through the results from each dataset, specifical
 			heart07 & -0.10 & 1.58 & 2.72 & 3.56 & 5.85 & 5.26 & 4.92 & 4.59 & 7.90 & 3.53 & 2.75\\
 			\hline
 		\end{tabular}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL and VOL for the Heart dataset across different $k$. Each value is the result of $(W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells marked with N/A were not run.}	
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL and VOL for the Heart dataset across different $k$. Each value is the result of $(MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells marked with N/A were not run.}	
 	\label{tab:heart_NVOLvsMETIS}
 \end{table}
 	
-Table~\ref{tab:heart_NVOLvsMETIS} shows the results for the Heart dataset. The first thing to notice is that NVOL improves $W^{\mathrm{max}}$ in almost all runs. On average, NVOL achieves a 4.70\% lower $W^{\mathrm{max}}$ than VOL across all runs, with improvements lying mostly between 2\% and 7\% and peaking at 17.57\%. Table~\ref{tab:heart_NVOLvsMETIS} records in total 4 losses, averaging 0.69\% across them with a peak at 1.30\%. As was already apparent from Table~\ref{tab:heart_dataset}, these graphs are very similar in structure: they have comparable standard deviations and a very close average number of edges per vertex. 
+Table~\ref{tab:heart_NVOLvsMETIS} shows the results for the Heart dataset. The first thing to notice is that NVOL improves $MV^{\mathrm{max}}$ in almost all runs. On average, NVOL achieves a 4.70\% lower $MV^{\mathrm{max}}$ than VOL across all runs, with improvements lying mostly between 2\% and 7\% and peaking at 17.57\%. Table~\ref{tab:heart_NVOLvsMETIS} records in total 4 losses, averaging 0.69\% across them with a peak at 1.30\%. As was already apparent from Table~\ref{tab:heart_dataset}, these graphs are very similar in structure: they have comparable standard deviations and a very close average number of edges per vertex. 
 
-This similarity is also reflected in the partitioning results, as most values within each column are relatively close to one another, with only a few exceptions. Looking at the average value per graph confirms this too. Table~\ref{tab:heart_METISvsNVOL_avgs} shows the average percentage difference of $W^{\mathrm{max}}$ for the Heart dataset. All seven averages fall within a narrow 4.15\% range, from heart04 at 3.75\% to heart02 at 7.90\%, reinforcing that the graphs behave similarly under partitioning.
+This similarity is also reflected in the partitioning results, as most values within each column are relatively close to one another, with only a few exceptions. Looking at the average value per graph confirms this too. Table~\ref{tab:heart_METISvsNVOL_avgs} shows the average percentage difference of $MV^{\mathrm{max}}$ for the Heart dataset. All seven averages fall within a narrow 4.15\% range, from heart04 at 3.75\% to heart02 at 7.90\%, reinforcing that the graphs behave similarly under partitioning.
  \begin{table}[h]
  	%\begin{sidewaystable}
  	\centering
@@ -146,15 +146,15 @@ This similarity is also reflected in the partitioning results, as most values wi
  		heart07 & 3.87\% & 7.90\% & $-0.10$\%\\
 		\hline 		
  	\end{tabular}
-	\caption{Average, best, and worst percentage difference in $W^{\mathrm{max}}$ per graph for VOL and NVOL (Heart dataset).}	
+	\caption{Average, best, and worst percentage difference in $MV^{\mathrm{max}}$ per graph for VOL and NVOL (Heart dataset).}	
  	\label{tab:heart_METISvsNVOL_avgs}
  \end{table}
 
 Notably, NVOL generally performs better for higher $k$ values. On average, NVOL performs two to three times as many moves as VOL during a single refinement round, and the number of partitions clearly amplifies this effect. This allows NVOL to explore more options and increases the chance of finding a better partitioning. Additionally, since more partitions lead to more moves, they also reduce the likelihood of getting stuck in a local minimum. This does, however, greatly affect the time NVOL takes to partition, which averages between 7 and 11 times slower than VOL across the Heart dataset.
 
-The runs where NVOL loses are: heart01 with $k=2$, heart04 with $k=2$, heart05 with $k=512$, and heart07 with $k=2$. Almost all of the failures occur when $k=2$. A likely cause is that, at each refinement step, NVOL sets a ceiling on the outgoing volume of a partition and then allows any move in which the affected partitions do not exceed this maximum. When the number of partitions is large, it is easier to find a move that decreases this value. However, with only two partitions, it is more likely that no available move can improve it. NVOL therefore tends to get stuck in a local minimum, which may result in a higher $W^{\mathrm{max}}$ than VOL.
+The runs where NVOL loses are: heart01 with $k=2$, heart04 with $k=2$, heart05 with $k=512$, and heart07 with $k=2$. Almost all of the failures occur when $k=2$. A likely cause is that, at each refinement step, NVOL sets a ceiling on the outgoing volume of a partition and then allows any move in which the affected partitions do not exceed this maximum. When the number of partitions is large, it is easier to find a move that decreases this value. However, with only two partitions, it is more likely that no available move can improve it. NVOL therefore tends to get stuck in a local minimum, which may result in a higher $MV^{\mathrm{max}}$ than VOL.
 
-Interestingly, Figure~\ref{fig:heart_stddev2} reveals that in every run with $k=2$, the standard deviation for NVOL is 0. This means that both partitions produced by NVOL have exactly the same outgoing volume. By only allowing moves that maintain or decrease $W^{\mathrm{max}}$, possibly at the cost of partitions with lower outgoing volumes, NVOL drives the partitions closer together. The values in Figure~\ref{fig:heart_stddev2} have been normalized using the average outgoing volume of the partitions. 
+Interestingly, Figure~\ref{fig:heart_stddev2} reveals that in every run with $k=2$, the standard deviation for NVOL is 0. This means that both partitions produced by NVOL have exactly the same outgoing volume. By only allowing moves that maintain or decrease $MV^{\mathrm{max}}$, possibly at the cost of partitions with lower outgoing volumes, NVOL drives the partitions closer together. The values in Figure~\ref{fig:heart_stddev2} have been normalized using the average outgoing volume of the partitions. 
 
 \begin{figure}[h]
 	\centering
@@ -210,9 +210,9 @@ This increased balance does come with some trade-offs. Figure~\ref{fig:heart4_p4
 	\label{fig:heart4_p4dist}
 \end{figure}
 
-Aside from $k=2$ cases discussed earlier, heart05 with $k=512$ is the only graph–partition combination in the Heart dataset where NVOL produces a higher $W^{\mathrm{max}}$ than VOL. The exact cause is hard to pin down from the data alone; NVOL probably made some moves from which no further improvement could be found. However, with some simple tuning (Section~\ref{sec:tuning}), NVOL recovers a win on this case, suggesting it had indeed settled into a local minimum it could not escape. Even in this failure, the loss is narrow: NVOL exceeds $W^{\mathrm{max}}_{\mathrm{VOL}}$ by only 1.16\%. It does, however, produce 1\% lower total communication volume and a lower standard deviation than VOL.
+Aside from $k=2$ cases discussed earlier, heart05 with $k=512$ is the only graph–partition combination in the Heart dataset where NVOL produces a higher $MV^{\mathrm{max}}$ than VOL. The exact cause is hard to pin down from the data alone; NVOL probably made some moves from which no further improvement could be found. However, with some simple tuning (Section~\ref{sec:tuning}), NVOL recovers a win on this case, suggesting it had indeed settled into a local minimum it could not escape. Even in this failure, the loss is narrow: NVOL exceeds $MV^{\mathrm{max}}_{\mathrm{VOL}}$ by only 1.16\%. It does, however, produce 1\% lower total communication volume and a lower standard deviation than VOL.
 
-Throughout the Heart dataset, NVOL has the best $W^{\mathrm{max}}$ in 57 out of 61 runs (4.70\% on average, peaking at 17.57\%) and produces more evenly balanced partition volumes in almost every run. It also yields slightly lower total communication volume in many cases, despite not optimizing for it directly. The main weakness is at $k=2$, where the constrained move space limits NVOL's ability to lower $W^{\mathrm{max}}$. NVOL does, however, produce perfectly even partitions in these cases. 
+Throughout the Heart dataset, NVOL has the best $MV^{\mathrm{max}}$ in 57 out of 61 runs (4.70\% on average, peaking at 17.57\%) and produces more evenly balanced partition volumes in almost every run. It also yields slightly lower total communication volume in many cases, despite not optimizing for it directly. The main weakness is at $k=2$, where the constrained move space limits NVOL's ability to lower $MV^{\mathrm{max}}$. NVOL does, however, produce perfectly even partitions in these cases. 
 
 \subsection{SuiteSparse Matrix Collection}\label{sec:Suitesparse}
 
@@ -263,10 +263,10 @@ Throughout the Heart dataset, NVOL has the best $W^{\mathrm{max}}$ in 57 out of 
 		\hline
 	\end{tabular}
 	}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL and VOL for the SuiteSparse Matrix Collection selection across different $k$. Each value is the result of $(W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells marked with N/R and N/A were not run.}
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL and VOL for the SuiteSparse Matrix Collection selection across different $k$. Each value is the result of $(MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100$. Cells marked with N/R and N/A were not run.}
 	\label{tab:suitesparse_METISvsNVOL}
 \end{table}
-Now consider the results for the SuiteSparse Matrix collection in Table~\ref{tab:suitesparse_METISvsNVOL}. The graphs vary considerably in size and structure, and so do the results. Regardless, NVOL is able to achieve a lower $W^{\mathrm{max}}$ than VOL 89\% of the time. Compared to the Heart dataset, NVOL wins more convincingly with an average improvement of 9.19\% across all runs. NVOL is able to produce an improvement above 20\% on several runs with a peak at 56.70\% for coPapersDBLP with $k=512$. However, NVOL loses more often and by larger margins than on the Heart dataset. In the 15 recorded losses NVOL averages 7.40\% loss with a peak at 32.09\% for coPapersDBLP with $k=2$. Most losses are concentrated in the italy\_osm graph and for several runs with $k=2$.
+Now consider the results for the SuiteSparse Matrix collection in Table~\ref{tab:suitesparse_METISvsNVOL}. The graphs vary considerably in size and structure, and so do the results. Regardless, NVOL is able to achieve a lower $MV^{\mathrm{max}}$ than VOL 89\% of the time. Compared to the Heart dataset, NVOL wins more convincingly with an average improvement of 9.19\% across all runs. NVOL is able to produce an improvement above 20\% on several runs with a peak at 56.70\% for coPapersDBLP with $k=512$. However, NVOL loses more often and by larger margins than on the Heart dataset. In the 15 recorded losses NVOL averages 7.40\% loss with a peak at 32.09\% for coPapersDBLP with $k=2$. Most losses are concentrated in the italy\_osm graph and for several runs with $k=2$.
 
 Table~\ref{tab:suitesparse_METISvsNVOL_avgs} reports the average per graph, where once again the graph difference is represented by the spread. Apart from italy\_osm, NVOL wins on average by at least 4.34\% and on the biggest graph, kmer\_U1a, it wins on average by 26.07\%. The table, however, does not seem to suggest any obvious relationship between graph properties (size, average degree, or degree variance) and the magnitude of the improvement, as the two next best winners are very different from each other. 
 \begin{table}[h]
@@ -303,7 +303,7 @@ Table~\ref{tab:suitesparse_METISvsNVOL_avgs} reports the average per graph, wher
 		kmer\_U1a & 26.07\% & 46.34\% & 0.72\%\\ %2
 		\hline
 	\end{tabular}
-	\caption{Average, best, and worst percentage difference in $W^{\mathrm{max}}$ per graph for VOL and NVOL (SuiteSparse Matrix Collection).}	
+	\caption{Average, best, and worst percentage difference in $MV^{\mathrm{max}}$ per graph for VOL and NVOL (SuiteSparse Matrix Collection).}	
 	\label{tab:suitesparse_METISvsNVOL_avgs}
 \end{table}
 
@@ -340,21 +340,21 @@ In total, NVOL loses 15 of 136 runs. Setting italy\_osm aside (discussed below),
 
 As opposed to the Heart dataset, NVOL is unable to improve on the total communication volume for the runs in Table~\ref{tab:suitesparse_2pComparison}. Most of the results are close to each other, except coPapersDBLP where NVOL's partitioning total volume is 1.5 times greater than VOL. This does however seem reasonable given that coPapersDBLP has a very high degree variance, meaning that the amount of edges each vertex has is very different from vertex to vertex. This can explain why even when perfectly balanced, the high degree variance greatly affects the communication volume.
 
-In general, NVOL achieves a lower standard deviation than VOL across all graphs. The picture is more mixed for total communication volume: both kmer graphs and coPapersDBLP show visibly higher total volumes under NVOL, since NVOL promotes moves that increase the per-partition average if they decrease the per-partition maximum. On channel-500x100x100-b050, packing-500x100x100-b050, hugetric, and hugetrace, on the other hand, NVOL yields a lower total communication volume. This is interesting, since these are also the graphs where NVOL achieves the most consistent improvements on $W^{\mathrm{max}}$. The remaining graphs produce total volumes close to VOL's, either slightly higher or slightly lower.
+In general, NVOL achieves a lower standard deviation than VOL across all graphs. The picture is more mixed for total communication volume: both kmer graphs and coPapersDBLP show visibly higher total volumes under NVOL, since NVOL promotes moves that increase the per-partition average if they decrease the per-partition maximum. On channel-500x100x100-b050, packing-500x100x100-b050, hugetric, and hugetrace, on the other hand, NVOL yields a lower total communication volume. This is interesting, since these are also the graphs where NVOL achieves the most consistent improvements on $MV^{\mathrm{max}}$. The remaining graphs produce total volumes close to VOL's, either slightly higher or slightly lower.
 
-Looking at Table~\ref{tab:suitesparse_METISvsNVOL}, we see that structurally similar graphs produce similar results, just as in the Heart dataset. The different structural properties of these graphs are reflected in how well NVOL manages to lower $W^{\mathrm{max}}$. Of all the graph types tested, NVOL struggles mostly with italy\_osm, the only road network in the dataset. For the others it works consistently well, lowering $W^{\mathrm{max}}$ and distributing the volume more evenly than VOL across partitions.
+Looking at Table~\ref{tab:suitesparse_METISvsNVOL}, we see that structurally similar graphs produce similar results, just as in the Heart dataset. The different structural properties of these graphs are reflected in how well NVOL manages to lower $MV^{\mathrm{max}}$. Of all the graph types tested, NVOL struggles mostly with italy\_osm, the only road network in the dataset. For the others it works consistently well, lowering $MV^{\mathrm{max}}$ and distributing the volume more evenly than VOL across partitions.
 
 \subsubsection{italy\_osm graph} 
 NVOL struggles greatly with the italy\_osm graph, achieving its second worst result across all our runs of $-21.21$\% at $k=512$ and failing to improve on VOL's standard deviation in most runs. The italy\_osm graph represents the Italian road network extracted from OpenStreetMap, with vertices placed at intersections and edges corresponding to the road segments between them. Road networks differ structurally from the regular meshes of the Heart dataset in several important ways. They are very sparse, with vertex degrees rarely exceeding 5. More importantly, they are strongly heterogeneous: dense urban clusters are connected by long, thin stretches of rural roads, and natural features such as rivers, mountains, and coastlines act as small separators between regions of very different sizes.
 
-This heterogeneity makes it noticeably harder for NVOL to push down $W^{\mathrm{max}}$ while keeping partitions balanced. A partition containing a dense urban area cannot easily be matched in volume to one covering a sparse rural region, so the moves NVOL relies on to equalize partition volumes have limited room to operate. The low average degree compounds the issue, since each move affects only a handful of edges and therefore shifts the outgoing volume by very little, leaving NVOL with little leverage to escape configurations where the maximum cannot be lowered.
+This heterogeneity makes it noticeably harder for NVOL to push down $MV^{\mathrm{max}}$ while keeping partitions balanced. A partition containing a dense urban area cannot easily be matched in volume to one covering a sparse rural region, so the moves NVOL relies on to equalize partition volumes have limited room to operate. The low average degree compounds the issue, since each move affects only a handful of edges and therefore shifts the outgoing volume by very little, leaving NVOL with little leverage to escape configurations where the maximum cannot be lowered.
 
 Despite the negative overall picture, NVOL is not uniformly worse on this graph: wins and losses occur in roughly equal numbers, with a best result of 8.87\% at $k=32$. The losses are simply larger in magnitude than the wins, which drags the average into negative territory. Figure~\ref{fig:italy_osmMaxVol} makes this asymmetry visible, a handful of moderate wins offset by a dramatic $-21.21$\% loss at $k=512$. This suggests NVOL can occasionally find a favorable configuration even on irregular structures, but the sparse and heterogeneous nature of road networks does not seem to benefit from its partition-aware optimization; if anything, it works against it.
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{pictures/italy_maxVolperc}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL and VOL for italy\_osm graph across different $k$. Each value is the result of $(W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100$.}
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL and VOL for italy\_osm graph across different $k$. Each value is the result of $(MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100$.}
 	\label{fig:italy_osmMaxVol}
 \end{figure}
 
@@ -372,7 +372,7 @@ These large differences persist for $4\leq k \leq 32$. Figure~\ref{fig:coPapers_
 	\label{fig:coPapers_stddev}
 \end{figure}
 
-Figure~\ref{fig:coPapers_p8dist} shows an example that supports this hypothesis. At $k=8$, NVOL achieves an almost perfectly balanced distribution with a standard deviation of 0.33 against VOL's 10,473. As with the heart04 case discussed earlier, this balance comes at the cost of pushing each partition's volume closer to each other. NVOL does not manage to improve $W^{\mathrm{max}}$, losing by 8.82\% to VOL, and as is visible in the figure, all the partitions are pushed closer to each other.
+Figure~\ref{fig:coPapers_p8dist} shows an example that supports this hypothesis. At $k=8$, NVOL achieves an almost perfectly balanced distribution with a standard deviation of 0.33 against VOL's 10,473. As with the heart04 case discussed earlier, this balance comes at the cost of pushing each partition's volume closer to each other. NVOL does not manage to improve $MV^{\mathrm{max}}$, losing by 8.82\% to VOL, and as is visible in the figure, all the partitions are pushed closer to each other.
 
 \begin{figure}[h]
 	\centering
@@ -388,12 +388,12 @@ Figure~\ref{fig:coPapers_p8dist} shows an example that supports this hypothesis.
 	\label{fig:coPapers_p128dist}
 \end{sidewaysfigure}
 
-At high partition counts, NVOL's advantage on coPapersDBLP becomes substantial: $W^{\mathrm{max}}$ improves by 40.37\%, 48.44\%, and 56.70\% over VOL at $k=128$, $k=256$, and $k=512$ respectively. Figure~\ref{fig:coPapers_p128dist} illustrates the $k=128$ case. NVOL's partition volumes cluster tightly around the mean while still achieving a significantly lower $W^{\mathrm{max}}$ than VOL. The struggle at low $k$ and these gains at high $k$ are two sides of the same coin: the heavy-tailed degree distribution that prevents balancing with few partitions becomes a feature NVOL can exploit once $k$ is large enough to spread the hubs across many partitions. Citation networks therefore appear to be a graph class where NVOL's balancing strategy has real potential, provided $k$ is sufficiently high.
+At high partition counts, NVOL's advantage on coPapersDBLP becomes substantial: $MV^{\mathrm{max}}$ improves by 40.37\%, 48.44\%, and 56.70\% over VOL at $k=128$, $k=256$, and $k=512$ respectively. Figure~\ref{fig:coPapers_p128dist} illustrates the $k=128$ case. NVOL's partition volumes cluster tightly around the mean while still achieving a significantly lower $MV^{\mathrm{max}}$ than VOL. The struggle at low $k$ and these gains at high $k$ are two sides of the same coin: the heavy-tailed degree distribution that prevents balancing with few partitions becomes a feature NVOL can exploit once $k$ is large enough to spread the hubs across many partitions. Citation networks therefore appear to be a graph class where NVOL's balancing strategy has real potential, provided $k$ is sufficiently high.
 
 \subsubsection{kmer\_U1a and kmer\_V2a graphs} \label{sec:kmer}
 Both kmer\_U1a and kmer\_V2a are protein k-mer graphs from the GenBank group of the SuiteSparse Matrix Collection, originally distributed as part of the 2018 GraphChallenge. Each vertex represents a short segment of amino acids (a k-mer) extracted from protein sequences, and edges connect k-mers that overlap in the underlying sequence. These are the two largest graphs in our selection, with kmer\_U1a containing 67.7 million vertices and kmer\_V2a 55 million. Both instances are extremely sparse, with an average degree of approximately 2, and highly fragmented into many small connected components. These graphs are the only ones marked N/R: NVOL was unable to finish partitioning them at $k=2048$ due to their size. We discuss this limitation of NVOL compared to VOL, and ideas for addressing it, in Section~\ref{sec:Improved eff}.
 
-Despite their structural similarity, the two graphs yield noticeably different partitioning results. On the larger instance, kmer\_U1a, NVOL achieves consistent improvements over VOL on $W^{\mathrm{max}}$, averaging 26.07\% across all values of $k$. On kmer\_V2a the gain is more modest: NVOL loses to VOL at $k=2$ and $k=128$, but still averages a positive 8.74\%. On the total volume metric, however, both graphs fail to improve over VOL, and the gap on kmer\_V2a widens as $k$ grows.
+Despite their structural similarity, the two graphs yield noticeably different partitioning results. On the larger instance, kmer\_U1a, NVOL achieves consistent improvements over VOL on $MV^{\mathrm{max}}$, averaging 26.07\% across all values of $k$. On kmer\_V2a the gain is more modest: NVOL loses to VOL at $k=2$ and $k=128$, but still averages a positive 8.74\%. On the total volume metric, however, both graphs fail to improve over VOL, and the gap on kmer\_V2a widens as $k$ grows.
 
 The two graphs also differ in how evenly NVOL distributes volume across partitions. On kmer\_V2a, NVOL produces a higher run-to-run standard deviation than on kmer\_U1a, where the standard deviation remains zero for all $k < 16$ and only begins to grow from $k=16$ onward. Figures~\ref{fig:kmer_V2a_voldev} and~\ref{fig:kmer_U1a_voldev} show the total volume and standard deviation across all runs on kmer\_V2a and kmer\_U1a respectively.
 
@@ -413,7 +413,7 @@ The two graphs also differ in how evenly NVOL distributes volume across partitio
 A possible explanation for these differences lies in the disparity of fragmentation. Although the two graphs differ in size by only 18\%, kmer\_U1a contains 44,132 connected components against 15,343 in kmer\_V2a, almost three times as many. The much larger number of small components in kmer\_U1a may give the partitioner more flexibility when distributing volume across partitions, while in kmer\_V2a the components are on average larger and harder to distribute as 
 $k$ grows, which is consistent with the higher standard deviation observed for both VOL and NVOL compared to kmer\_U1a.
 
-The combination of low standard deviation and improvement on $W^{\mathrm{max}}$ is most evident in the high $k$ runs of kmer\_U1a. Figure~\ref{fig:kmer_U1a_p128dist} shows the per-partition outgoing-volume distribution of VOL and NVOL at $k=128$. As in Figure~\ref{fig:coPapers_p128dist}, NVOL produces partitions with much more uniform volumes than VOL and visibly reduces $W^{\mathrm{max}}$. The pattern becomes even more pronounced at higher values of $k$, but those plots are harder to read, so we show only $k=128$ here.
+The combination of low standard deviation and improvement on $MV^{\mathrm{max}}$ is most evident in the high $k$ runs of kmer\_U1a. Figure~\ref{fig:kmer_U1a_p128dist} shows the per-partition outgoing-volume distribution of VOL and NVOL at $k=128$. As in Figure~\ref{fig:coPapers_p128dist}, NVOL produces partitions with much more uniform volumes than VOL and visibly reduces $MV^{\mathrm{max}}$. The pattern becomes even more pronounced at higher values of $k$, but those plots are harder to read, so we show only $k=128$ here.
 
 \begin{sidewaysfigure}
 	\centering
@@ -422,14 +422,14 @@ The combination of low standard deviation and improvement on $W^{\mathrm{max}}$ 
 	\label{fig:kmer_U1a_p128dist}
 \end{sidewaysfigure}
 
-Overall, the kmer graphs paint a nuanced picture of NVOL's behavior on very sparse, highly fragmented inputs. On $W^{\mathrm{max}}$, NVOL clearly outperforms VOL on average for both graphs. On the total volume, however, neither graph shows an improvement, indicating that NVOL's redistribution of load comes at the cost of a higher average volume per partition. The contrast between the two instances further suggests that fragmentation level matters: kmer\_U1a, with nearly three times as many connected components, admits more stable and more consistent improvements, whereas the larger components of kmer\_V2a constrain how the volume can be balanced as $k$ grows. This uneven volume distribution is visible for both NVOL and VOL.
+Overall, the kmer graphs paint a nuanced picture of NVOL's behavior on very sparse, highly fragmented inputs. On $MV^{\mathrm{max}}$, NVOL clearly outperforms VOL on average for both graphs. On the total volume, however, neither graph shows an improvement, indicating that NVOL's redistribution of load comes at the cost of a higher average volume per partition. The contrast between the two instances further suggests that fragmentation level matters: kmer\_U1a, with nearly three times as many connected components, admits more stable and more consistent improvements, whereas the larger components of kmer\_V2a constrain how the volume can be balanced as $k$ grows. This uneven volume distribution is visible for both NVOL and VOL.
 
 \subsubsection{Numerical simulation graphs}
 The most represented group of graphs in our selection are numerical simulation graphs. These graphs are derived from physical domains, a chunk of fluid, a 3D box of space, a mechanical structure, by discretizing the domain into a mesh of small cells. Each vertex represents a cell, and edges connect cells that share a face or boundary in the mesh. This type of graph tends to be very regular: most vertices have a similar number of neighbors, and there are no hub vertices. Five of our graphs fall into this category: channel-500x100x100-b050, packing-500x100x100-b050, hugetric-00000, hugetric-00020, and hugetrace-00020.
 
-NVOL performs consistently well on these graphs, improving $W^{\mathrm{max}}$ in every single run (55 runs). As mentioned earlier, NVOL also beats VOL on total communication volume in several of these cases. Structurally these graphs are close cousins of the Heart dataset: both classes are originally regular meshes with low degree variance, which partly explains why NVOL performs so well. The symmetry in these graphs lets NVOL easily find moves that improve the volume, as opposed to some of the previous examples. 
+NVOL performs consistently well on these graphs, improving $MV^{\mathrm{max}}$ in every single run (55 runs). As mentioned earlier, NVOL also beats VOL on total communication volume in several of these cases. Structurally these graphs are close cousins of the Heart dataset: both classes are originally regular meshes with low degree variance, which partly explains why NVOL performs so well. The symmetry in these graphs lets NVOL easily find moves that improve the volume, as opposed to some of the previous examples. 
 
-Table~\ref{tab:hugetric00000_comparison} shows the percentage difference in total volume and standard deviation for hugetric-00000, the numerical simulation graph with the highest average improvement on $W^{\mathrm{max}}$. We chose this graph specifically because it is representative of the class. A positive value indicates that NVOL achieves a lower value than VOL, following the same convention as Table~\ref{tab:suitesparse_METISvsNVOL}. NVOL achieves a lower total volume in all runs, with an average improvement of 10.59\%. NVOL also produces a consistently better standard deviation, suggesting that the volumes are more evenly distributed across the partitions.
+Table~\ref{tab:hugetric00000_comparison} shows the percentage difference in total volume and standard deviation for hugetric-00000, the numerical simulation graph with the highest average improvement on $MV^{\mathrm{max}}$. We chose this graph specifically because it is representative of the class. A positive value indicates that NVOL achieves a lower value than VOL, following the same convention as Table~\ref{tab:suitesparse_METISvsNVOL}. NVOL achieves a lower total volume in all runs, with an average improvement of 10.59\%. NVOL also produces a consistently better standard deviation, suggesting that the volumes are more evenly distributed across the partitions.
 
 \begin{table}[h]
 	\centering
@@ -468,7 +468,7 @@ Table~\ref{tab:hugetric00000_comparison} shows the percentage difference in tota
 	\label{tab:hugetric00000_comparison}
 \end{table}
 
-On hugetric-00000, NVOL produces excellent partitions, achieving a lower total communication volume, a lower $W^{\mathrm{max}}$, and a more even distribution than VOL. This pattern is also visible across the remaining numerical simulation graphs, making NVOL a valuable partitioning objective for this graph class.
+On hugetric-00000, NVOL produces excellent partitions, achieving a lower total communication volume, a lower $MV^{\mathrm{max}}$, and a more even distribution than VOL. This pattern is also visible across the remaining numerical simulation graphs, making NVOL a valuable partitioning objective for this graph class.
 
 \subsubsection{Geometric graphs}
 The remaining graphs all fall under the geometric graph class. These graphs are derived from points in space rather than from physical adjacency or relationships. pa2010, for example, represents the Pennsylvania Census 2010 redistricting graph, with vertices as Census blocks and edges connecting blocks that share a border. The two delaunay graphs are synthetic Delaunay triangulations of random points in a 2D unit square, while rgg\_n\_2\_23\_s0 is a random geometric graph. All four have low degree variance with no hub vertices.
@@ -480,13 +480,13 @@ pa2010 is structurally similar to italy\_osm, yet NVOL performs well on it. The 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{pictures/geometric_max_vol_diff}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL and VOL for our selection of geometric graphs across different $k$ $\left((W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$.}
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL and VOL for our selection of geometric graphs across different $k$ $\left((MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$.}
 	\label{fig:geometric_diff}
 \end{figure}
 
 Both the best and worst results in this group come from rgg\_n\_2\_23\_s0, which records a loss of 6.46\% at $k=2$ and a win of 18.60\% at $k=512$. It is also the only graph with a loss outside $k=2$, losing 0.64\% at $k=128$. As with heart05 at $k=512$, there is no clear indication of why NVOL loses on this run. The partitions still have a lower standard deviation than VOL, and their total volumes are very close. This appears to be once again a case of a succession of bad moves leading NVOL into a configuration it cannot escape.
 
-Geometric graphs are therefore a class where NVOL is reliably useful: it consistently lowers $W^{\mathrm{max}}$, produces total volumes very close to VOL, and yields a slightly lower standard deviation in most runs.
+Geometric graphs are therefore a class where NVOL is reliably useful: it consistently lowers $MV^{\mathrm{max}}$, produces total volumes very close to VOL, and yields a slightly lower standard deviation in most runs.
 
 \section{Tuning NVOL}\label{sec:tuning}
 METIS comes with the option to further tune your refinement. By default the algorithm runs with an imbalance factor of 3\%, however, this number can be defined at runtime. Increasing this value allows greater imbalance in the partition weights, which in turn should allow moves that were not possible under the default imbalance. We test NVOL at a 4\% imbalance, one percentage point above the default. Although small, this does affect the resulting partitions, and we wanted to see if it helps NVOL to perform better than VOL. We compare NVOL with a 4\% imbalance to the same VOL setup, 3\% imbalance, as the previous sections. The goal of this subsection is to show how NVOL is affected by this change. 
@@ -527,11 +527,11 @@ Table~\ref{tab:heart_NVOLvsMETIS_4} shows the percentage difference between VOL 
 		\hline
 	\end{tabular}
 	}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL 4\% and VOL for the Heart dataset across different $k$. Each value is the result of $\left((W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$. Cells marked with N/A were not run.}
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL 4\% and VOL for the Heart dataset across different $k$. Each value is the result of $\left((MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$. Cells marked with N/A were not run.}
 	\label{tab:heart_NVOLvsMETIS_4}
 \end{table}
 
-In Table~\ref{tab:heart_NVOL_NVOL4_avg} we compare the average results of each graph. For several graphs, the larger wins pull the average above default NVOL despite the additional losses. NVOL with 4\% works best on average on smaller graphs, as the average difference decreases as the graph size grows. This can possibly be explained by the fact that in smaller graphs, some moves are more restricted by the weight constraints. A move that decreases  $W^{\mathrm{max}}$ may not be accepted because the partition weight is too high. It is also visible in heart01, heart03, and heart04 that NVOL with 4\% produces the best result.
+In Table~\ref{tab:heart_NVOL_NVOL4_avg} we compare the average results of each graph. For several graphs, the larger wins pull the average above default NVOL despite the additional losses. NVOL with 4\% works best on average on smaller graphs, as the average difference decreases as the graph size grows. This can possibly be explained by the fact that in smaller graphs, some moves are more restricted by the weight constraints. A move that decreases  $MV^{\mathrm{max}}$ may not be accepted because the partition weight is too high. It is also visible in heart01, heart03, and heart04 that NVOL with 4\% produces the best result.
 
 This imbalance comes at a trade-off: more uncertainty in how much NVOL loses. The default run's worst loss was only $-1.30\%$, while nine of the losses here are larger in magnitude. This is very visible in heart06 and heart07, each registering three losses and dragging their averages below the default NVOL configuration. Total volume and standard deviation are relatively close to each other in most runs for NVOL and NVOL with 4\% imbalance.
 
@@ -560,7 +560,7 @@ This imbalance comes at a trade-off: more uncertainty in how much NVOL loses. Th
 		heart07 & 3.87\% & 2.74\% & 7.61\% & $-6.97$\%\\
 		\hline
 	\end{tabular}
-	\caption{Average, best, and worst percentage difference in $W^{\mathrm{max}}$ per graph for VOL and NVOL 4\% (Heart dataset).}	
+	\caption{Average, best, and worst percentage difference in $MV^{\mathrm{max}}$ per graph for VOL and NVOL 4\% (Heart dataset).}	
 	\label{tab:heart_NVOL_NVOL4_avg}
 \end{table}
 
@@ -617,7 +617,7 @@ Table~\ref{tab:suitesparse_METISvsNVOL_4} shows the results on the selection of 
 		\hline
 	\end{tabular}
 	}
-	\caption{Percentage difference in $W^{\mathrm{max}}$ between NVOL 4\% and VOL for the SuiteSparse Matrix Collection selection across different $k$. Each value is the result of $\left((W^{\mathrm{max}}_{\mathrm{VOL}} - W^{\mathrm{max}}_{\mathrm{NVOL}}) / W^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$. Cells marked with N/R and N/A were not run.}
+	\caption{Percentage difference in $MV^{\mathrm{max}}$ between NVOL 4\% and VOL for the SuiteSparse Matrix Collection selection across different $k$. Each value is the result of $\left((MV^{\mathrm{max}}_{\mathrm{VOL}} - MV^{\mathrm{max}}_{\mathrm{NVOL}}) / MV^{\mathrm{max}}_{\mathrm{VOL}} \times 100\right)$. Cells marked with N/R and N/A were not run.}
 	\label{tab:suitesparse_METISvsNVOL_4}
 \end{table}
 
@@ -661,7 +661,7 @@ Comparing the per-graph averages in Table~\ref{tab:suitesparse_NVOL_NVOL4_avg}, 
 		kmer\_U1a & 26.07\% & 26.05\% & 49.69\% & 0.53\%\\ %2
 		\hline
 	\end{tabular}
-	\caption{Average, best, and worst percentage difference in $W^{\mathrm{max}}$ per graph for VOL and NVOL 4\% (SuiteSparse Matrix Collection).}	
+	\caption{Average, best, and worst percentage difference in $MV^{\mathrm{max}}$ per graph for VOL and NVOL 4\% (SuiteSparse Matrix Collection).}	
 	\label{tab:suitesparse_NVOL_NVOL4_avg}
 \end{table}
 

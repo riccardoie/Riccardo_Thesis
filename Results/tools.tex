@@ -1,10 +1,10 @@
-\chapter{METIS and Supporting Tooling}\label{chap:NVOL tooling}
+\chapter{METIS with NVOL and Supporting Tooling}\label{chap:NVOL tooling}
 This chapter presents the tools developed and used throughout this thesis to produce the results in Chapter~\ref{chap:results}. The first section describes in detail how METIS was adapted to support NVOL, while the second section covers the tools used for data analysis and visualization.
 
-\section{METIS}
+\section{METIS} \label{sec:Metis very general description}
 For this thesis we used METIS as our multilevel $k$-way partitioner. The METIS framework is open source\footnote{\url{https://github.com/KarypisLab/METIS}}, developed by George Karypis, and widely used. We have also made public a version extended with NVOL\footnote{\url{https://github.com/riccardoie/METIS-with-NVOL}}. Most of the logic behind the multilevel $k$-way algorithm has already been covered in Chapters~\ref{chap:multilevel-kway}-\ref{chapter5}, so we refer the reader to those chapters.
 
-\subsection{Implementing NVOL} \
+\subsection{Implementing NVOL} \label{sec: implementing NVOL}
 Implementing NVOL required extending METIS's existing infrastructure. We first defined a new volume-based objective function named NVOL. Because it is volume-based, NVOL reuses the coarsening and initial partitioning code of the total volume objective function (VOL); our extensions are confined to the refinement stage.
 
 %one sentence about how graphs and ctrl are these general global structs
@@ -29,7 +29,7 @@ Once every destination has been evaluated and a move selected, we update the \te
 \texttt{compute\_potential\_move\_volume\_change} is the helper that makes the selection of moves possible. It implements the algorithm described in Section~\ref{sec:partition specific gain imp}. The function begins by zeroing out the refinement table to ensure no stale values from other vertices remain. Since this pass already touches each of the $k$ rows of the table, we use the opportunity to also record which partition currently has the highest volume; this value defines the ceiling when choosing moves. The double array structure of the refinement table behaves as a matrix: the first index identifies a row and the second a column, so \texttt{vol\_refinement\_table[p].gain\_list[j]} stores the volume change that partition $p$ would experience if a vertex $i$ were moved to partition $j$. To fill this table, the function walks the neighborhood of $i$ and updates the relevant entries of the table according to the first three cases described in Section~\ref{Partition specific gain calculation}. Once all neighbors have been accounted for, the function handles case 4 and the volume contribution of the moving vertex through an additional loop, adjusting the volumes of the source and destination partitions accordingly. 
 
 \subsubsection{Time complexity}
-The additional bookkeeping required by NVOL comes at a measurable cost to METIS's runtime. During refinement, every visited vertex triggers a set of additional iterations that are not present in the VOL implementation of METIS. These extra passes accumulate quickly as the graph grows. The result is that NVOL is noticeably slower than VOL, with the gap widening as the input size increases.
+The additional bookkeeping required by NVOL comes at a measurable cost to METIS's runtime. For the smaller graphs there is no difference, but for the rest NVOL takes on average 7-11 times more than VOL, with the biggest graphs on a high number of partitions being up to 60 times slower. During refinement, every visited vertex triggers a set of additional iterations that are not present in the VOL implementation of METIS. These extra passes accumulate quickly as the graph grows. The result is that NVOL is noticeably slower than VOL, with the gap widening as the input size increases.
 
 The two parameters that drive this slowdown are the average vertex degree and the number of partitions. The added iterations walk over both the neighboring vertices of each visited vertex and the partitions adjacent to it, so denser graphs and finer partitionings each independently inflate the work performed per refinement step. When both quantities are large simultaneously, the effects compound and the runtime penalty becomes substantial.
 

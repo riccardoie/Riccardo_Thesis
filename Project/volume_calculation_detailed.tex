@@ -1,12 +1,10 @@
 \chapter{Communication Volume Calculation} \label{cv_calculation}
-This chapter will show how the change in communication volume is calculated. This chapter will only focus on how gain is evaluated and implemented in the multilevel framework for communication volume. The next chapter will show how a vertex move is chosen using the results from this calculation. 
+In Section~\ref{sec:greedy_refinement} of the previous chapter, we showed how the change in the objective function's value (the gain) is computed for the edge-cut objective function. This chapter extends that discussion to two other objective functions, both based on communication volume. The next chapter then shows how these gain calculations are used inside the greedy refinement algorithm.
 
-The total communication volume objective function (VOL) seeks to improve the total communication volume of a partitioned graph. Even though this metric is more representative of actual communication than edge cut, it does not necessarily produce a well balanced result. The net change in total communication volume after a potential move might hide bottlenecks and overloaded partitions. In contrast, NVOL delivers specific information about how the volume of each individual partition is affected by a move. Since NVOL was implemented on top of the METIS framework we will first spend some time formalizing how METIS and other partitioners perform calculations needed for VOL to work in Section~\ref{METIS gain calculation}. In Section~\ref{Partition specific gain calculation} we present the logic behind NVOL, and how we are able to evaluate how partitions are affected by a potential move.
+The chapter is organized into four sections. The first introduces the basic definitions needed to understand communication volume operations. The second describes the gain calculation for the total communication volume objective function (VOL), which is more representative of actual communication cost than edge-cut, although it does not necessarily yield a well-balanced result. We treat VOL first because it is the standard approach used by partitioners such as METIS, and because it is easier to follow than NVOL on a first read, the gain for a vertex fits in a single vector.
 
-%In contrast, the optimization approach introduced in this work delivers detailed information about how individual partitions are affected by a potential move. 
-%To address this requirement, a matrix based data structure was developed. In this representation, each row corresponds to a partition, while each column represents a potential destination partition. Each matrix element therefore captures the gain associated with a specific partition when a move to a particular destination is considered.
+The third section presents our novel gain calculation, used by NVOL, which provides finer information about how the volume of each individual partition is affected by a move. Here each vertex has a table representing the partition-specific gain of all possible moves. The section closes with an algorithm that ties the calculation together. The fourth and final section works through a few concrete examples to give the reader a clearer picture of how everything fits together.
 
-%The total gain for a move can still be derived by summing the values within a column, which yields the same aggregate gain measure used by METIS. However, unlike the original approach, this representation preserves the contribution to each individual partition. Consequently, it enables partition aware optimization decisions by explicitly revealing how each partition is affected by a move.
 \begin{table}[h]
 %	\centering
 	\label{tab:notation}
@@ -15,15 +13,16 @@ The total communication volume objective function (VOL) seeks to improve the tot
 		\textbf{Symbol} & \textbf{Description} \\
 		\midrule
 		$G$          & The graph \\
-		$V$			& Set of all the vertices in the graph\\
+		$V$			& Set of all vertices in the graph\\
 		$E$			& Set of all edges in the graph\\
 		$V_b$		& Set of all boundary vertices in the graph\\
-		$V^{\mathrm{adj}}_i$ & Set of all vertices incident on vertex $i$\\
+		$V^{\mathrm{adj}}_i$ & Set of all vertices incident to vertex $i$\\
 		$N_i$        & Set of neighboring partitions of vertex $i$ \\
 		$N_{iv}$      & Set of partitions neighboring both vertex $i$ and  vertex $v$\\
 		$N_{i-v}$    & Set of partitions only neighboring vertex $i$ and not vertex $v$\\
 		$w(i)$		& Vertex weight of vertex $i$\\
 		$P[i]$		& Partition of vertex $i$\\
+		$PV[a]$		& Outgoing communication volume of partition $a$\\
 		$C_i[n]$	& Number of edges a vertex $i$ has to a partition $n$\\
 		$G_i$		& Gain vector of a vertex $i$\\
 		$SG_i$		& Gain table of a vertex $i$\\	
@@ -32,9 +31,9 @@ The total communication volume objective function (VOL) seeks to improve the tot
 	\caption{Notation used in Chapter~\ref{cv_calculation}.}
 \end{table}
 \section{Basic definitions}
-To facilitate understanding of the implementation (see Section~\ref{cv_calc_implementation}), we begin by introducing a formal definition of communication volume. Let $G = (V, E)$ be a graph, and let $P$ be the partition vector, where $P[v]$ is the partition a vertex \textit{v} is assigned to. A vertex $u$ is defined as a neighbor of $v$ if there exists an edge $\{u,v\} \in E$. Any vertex adjacent to at least one vertex belonging to a different partition is said to lie on the boundary. We denote the set of all boundary vertices by $V_b \subseteq V$. Formally, a vertex $v \in V_b$ if there exists at least one neighbor $u \in V$ such that $\{v,u\} \in E$ and $P[v] \neq P[u]$.
+To facilitate understanding of how gain calculation works, we begin by introducing a formal definition of communication volume. Let $G = (V, E)$ be a graph, and let $P$ be the partition vector, where $P[v]$ is the partition a vertex \textit{v} is assigned to. A vertex $u$ is defined as a neighbor of $v$ if there exists an edge $\{u,v\} \in E$. Any vertex adjacent to at least one vertex belonging to a different partition is said to lie on the boundary. We denote the set of all boundary vertices by $V_b \subseteq V$. Formally, $v \in V_b$ if there exists at least one neighbor $u \in V$ such that $\{v,u\} \in E$ and $P[v] \neq P[u]$.
 
-For each boundary vertex $v \in V_b$, let $N_v$ denote the set of distinct partitions (excluding $P[v]$) hosting its neighboring vertices. The number of partitions contained in $N_v$, defined as $\lvert N_v \rvert$, is the outgoing communication volume of vertex $v$. Note that the number of edges incident to $v$ is not directly relevant for this measure, only the number of distinct neighboring partitions. In Figure~\ref{1}, vertex $A$ has a communication volume of 2, as it is connected to vertices in two distinct partitions. In contrast, Figure~\ref{2} illustrates a case where vertex $A$ has two edges, both connecting to vertices within the same partition. Consequently, the communication volume of vertex $A$ is 1, since only a single distinct external partition is involved.
+For each boundary vertex $v \in V_b$, let $N_v$ denote the set of distinct partitions (excluding $P[v]$) to which its neighboring vertices belong. The number of partitions contained in $N_v$, defined as $\lvert N_v \rvert$, is the outgoing communication volume of vertex $v$. Note that the number of edges incident to $v$ is not directly relevant for this measure, only the number of distinct neighboring partitions. In Figure~\ref{1}, vertex $A$ has an outgoing communication volume of 2, as it is connected to vertices in two distinct partitions. In contrast, Figure~\ref{2} illustrates a case where vertex $A$ has two edges, both connecting to vertices within the same partition. Consequently, the outgoing communication volume of vertex $A$ is 1, since only a single neighboring partition is involved.
 
 \begin{figure}[H]
 	\centering
@@ -54,11 +53,11 @@ For each boundary vertex $v \in V_b$, let $N_v$ denote the set of distinct parti
 
 The total communication volume of the partitioned graph is obtained by summing the outgoing volumes over all boundary vertices:
 \begin{equation} \label{total_volume}
-	\mathrm{total\quad volume} = \sum_{v \in V_b} \left| N_v \right|w(v)
+	\mathrm{total~volume} = \sum_{v \in V_b} \left| N_v \right|w(v)
 \end{equation}
-Here, $w(v)$ denotes the weight associated with vertex $v$, which scales its contribution to the outgoing communication volume. Given the structure of the multilevel approach, regardless of a unit vertex weight graph, the vertices might have weights during uncoarsening (see Section~\ref{sec:uncoarsening}). In Figure~\ref{tot_vol_example}, all vertices are assumed to have a unit weight. The boundary set is $V_b = \{A, B, C, D, E\}$. Note that vertex \textit{F} is not part of this set, as it has no edges connecting to vertices in other partitions.
+Here, $w(v)$ denotes the weight associated with vertex $v$, which scales its contribution to the outgoing communication volume. Even if the original graph has unit vertex weights, vertices acquire non-unit weights during coarsening as a result of vertex aggregation, and these weights persist during uncoarsening (see Section~\ref{sec:uncoarsening}). In Figure~\ref{tot_vol_example}, all vertices are assumed to have unit weight. The boundary set is $V_b = \{A, B, C, D, E\}$. Note that vertex \textit{F} is not part of this set, as it has no edges connecting to vertices in other partitions.
 
-Applying Equation~\ref{total_volume}, the total communication volume is computed by summing the contributions of all vertices in the boundary set. Vertices \textit{A}, \textit{C}, and \textit{D} each contribute a volume of 2, while vertices \textit{B} and \textit{E} each contribute a volume of 1. This results in a total communication volume of 8.
+Applying Equation~\ref{total_volume}, we compute the total communication volume  by summing the contributions of all vertices in the boundary set. Vertices \textit{A}, \textit{C}, and \textit{D} each contribute a volume of 2, while vertices \textit{B} and \textit{E} each contribute a volume of 1. This results in a total communication volume of 8.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=.35\linewidth]{pictures/tot_vol_example}
@@ -67,22 +66,23 @@ Applying Equation~\ref{total_volume}, the total communication volume is computed
 \end{figure}
 
 \section{VOL gain calculation} \label{METIS gain calculation}
-To determine which vertices should be moved, and to which partitions, the gain need to be evaluated for any potential move. The gain represents the change in total communication volume resulting from relocating a vertex to a new partition. A positive gain indicates a reduction in total communication volume, whereas a negative gain corresponds to an increase.
-%%Should need some rephrasing about how this is deduced from METIS and how I could not find it anywhere.
+This section describes how the gain resulting from a vertex move is computed for VOL. All definitions are deduced from METIS's implementation, but the approach is standard and applies to any implementation of a total communication volume objective function. The gain for VOL represents the change in total communication volume resulting from relocating a vertex to a new partition: a positive gain indicates a reduction, a negative gain an increase. 
 
-Since communication only arises when an edge connects two vertices belonging to different partitions, a vertex move can only affect the communication volume of its neighboring partitions. For each boundary vertex $i \in V_b$, a partitioner needs to examine all its adjacent vertices $v \in V^{\mathrm{adj}}_i$, where $V^{\mathrm{adj}}_i \subseteq V$ denotes the set of vertices adjacent to $i$. When considering moving a boundary vertex \textit{i}, the gain calculation depends on the relationship that \textit{i} and each of its neighboring vertices have with other partitions. The effect on volume depends on which partitions they share. In particular, we define for every vertex \textit{i} and every neighbor vertex \textit{v}
+Since communication only arises when an edge connects two vertices belonging to different partitions, a vertex move can only affect the communication volume of its neighboring partitions. For each boundary vertex $i \in V_b$, a partitioner needs to examine all its adjacent vertices $v \in V^{\mathrm{adj}}_i$, where $V^{\mathrm{adj}}_i \subseteq V$ denotes the set of vertices adjacent to $i$. When considering moving a boundary vertex \textit{i}, the gain calculation depends on the relationship that \textit{i} and each of its neighboring vertices have with other partitions. The effect on volume depends on which partitions they share. To support our calculations later, we define, for every vertex \textit{i} and every neighboring vertex \textit{v}
 \begin{equation}
 	N_{i-v} = N_i \setminus (N_v \cup P[v])
 	\quad \text{and} \quad
 	N_{iv} = (N_i \cap N_v) \cup P[v]
 \end{equation}
-representing partitions exclusive to $i$ and partitions shared by $i$ and $v$, respectively. In both cases, we add in $P[v]$ as this partition is shared even though it is not part of the $N_v$ set. A vertex \textit{v} has access to its own partition $P[v]$, meaning that $P[v]$ needs to be removed in $N_{i-v}$ and added in $N_{iv}$ to precisely determine shared partitions. Notice how both sets are subsets of $N_i = N_{i-v} \cup N_{iv}$.
+representing partitions exclusive to $i$ and partitions shared by $i$ and $v$, respectively. Notice how both sets are subsets of $N_i = N_{i-v} \cup N_{iv}$. Recall that by definition $N_v$ excludes $v$'s own partition $P[v]$. To correctly identify shared partitions, $P[v]$ must therefore be added to $N_{iv}$ and removed from $N_{i-v}$. 
 
-As a concrete example, consider Figure~\ref{tot_vol_example} and suppose the candidate vertex is~$A$, with neighbor~$B$ under consideration. Here, $N_A = \{\mathrm{blue}, \mathrm{green}\}$, while $N_B = \{\mathrm{blue}\}$. Consequently, $N_{A-B} = \{\text{green}\}$, since green is the only partition connected to~$A$ but not to~$B$, whereas $N_{AB} = \{\mathrm{blue}\}$ as both vertices have at least one edge to the blue partition. Keeping \textit{A} as the candidate vertex, consider now neighbor~$C$ with $N_C = \{\mathrm{red}, \mathrm{green}\}$. \textit{A} and \textit{C} have access to the same partitions, meaning that $N_{A-C} = \emptyset$ and $N_{AC} = \{\mathrm{blue}, \mathrm{green}\}$. This example highlights the need for adding $P[C]$ to the sets. The sets would have been $N_{A-C} = \{\mathrm{blue}\}$, $N_{AC} = \{\mathrm{green}\}$ if we had not accounted for $P[C]$. However, by simply viewing Figure~\ref{tot_vol_example} we can see that the blue partition is shared and not unique to \textit{A}.
+As a concrete example, consider Figure~\ref{tot_vol_example} and suppose the candidate vertex is~$A$, with neighbor~$B$ under consideration. Here, $N_A = \{\mathrm{blue}, \mathrm{green}\}$, while $N_B = \{\mathrm{blue}\}$. Consequently, $N_{A-B} = \{\mathrm{green}\}$, since green is the only partition connected to~$A$ but not to~$B$, whereas $N_{AB} = \{\mathrm{blue}\}$ as both vertices have at least one edge to the blue partition. Keeping \textit{A} as the candidate vertex, consider now neighbor~$C$ with $N_C = \{\mathrm{red}, \mathrm{green}\}$. \textit{A} and \textit{C} have access to the same partitions, meaning that $N_{A-C} = \emptyset$ and $N_{AC} = \{\mathrm{blue}, \mathrm{green}\}$. This example highlights the need for adding $P[C]$ to the sets. The sets would have been $N_{A-C} = \{\mathrm{blue}\}$, $N_{AC} = \{\mathrm{green}\}$ if we had not accounted for $P[C]$. However, from Figure~\ref{tot_vol_example} we can see that the blue partition is shared and not unique to \textit{A}.
 
-Let $C_i[n]$ denote the number of edges connecting $i$ to partition $n$. In Figure~\ref{tot_vol_example}, for example, $C_A[\mathrm{blue}] = 1$, as \textit{A} has only one edge connected to the blue partition, while $C_D[\mathrm{blue}] = 2$, as \textit{D} has two edges connected to the blue partition. Let $G_i$ be a vector with a number of elements equal to the number of partitions, initialized at 0, where $G_i[n]$ represents the total gain obtained by moving vertex $i$ to partition $n$. For a candidate vertex \textit{i} being considered for a move, the gain contributions to all possible destination partitions are evaluated for each neighbor $v \in V^{\mathrm{adj}}_i$ as follows:
+Since communication volume is a more complex metric to calculate, and cannot be evaluated on-the-fly like edge-cut, we need to expand our definitions. We define a gain vector $G_i$ with a number of elements equal to the number of partitions, initialized to 0, where $G_i[a]$ represents the total gain obtained by moving vertex $i$ to partition $a$. To determine which contributions to apply to $G_i$, we will also need to count edges between a vertex and a specific partition. Let $C_i[a]$ denote the number of edges connecting $i$ to partition $a$. In Figure~\ref{tot_vol_example}, for example, $C_A[\mathrm{blue}] = 1$, as \textit{A} has only one edge connected to the blue partition, while $C_D[\mathrm{blue}] = 2$, as \textit{D} has two edges connected to the blue partition. 
+
+For a candidate vertex \textit{i} being considered for a move, the gain resulting from moving $i$ to a partition is evaluated by iterating over all neighboring vertices $v \in V^{\mathrm{adj}}_i$. The contribution to $G_i$ depends on the relationship between $i,v$, and their partitions. There are four cases:
 \begin{enumerate}[label=\phantom{1.}]\label{METIS CASES}
-	\item \textbf{Case 1.} \hypertarget{METIS_case_1} If $P[v] = P[i]$, then moving $i$ to any partition in $k \in N_{i-v}$ creates a shared inter-partition connection for $v$, yielding
+	\item \textbf{Case 1.} \hypertarget{METIS_case_1} If $P[v] = P[i]$, then moving $i$ to any partition $k \in N_{i-v}$ creates a shared inter-partition connection for $v$, yielding
 	\begin{equation}
 		G_i[k] \mathrel{-}= w(i)
 	\end{equation}
@@ -90,32 +90,83 @@ Let $C_i[n]$ denote the number of edges connecting $i$ to partition $n$. In Figu
 	\begin{equation}
 		G_i[k] \mathrel{+}= w(i)
 	\end{equation}
-	\item \textbf{Case 3.}\hypertarget{METIS_case_3} If $P[v] \neq P[i]$ and $C_v[P[i]] > 1$, then moving $i$ to any partition $k \in N_{i-v}$ introduces a new inter-partition connection for $v$, resulting in a gain contribution of 
+	\item \textbf{Case 3.}\hypertarget{METIS_case_3} If $P[v] \neq P[i]$ and $C_v[P[i]] > 1$, then moving $i$ to any partition $k \in N_{i-v}$ introduces a new inter-partition connection for $v$, yielding 
 	\begin{equation}
 		G_i[k] \mathrel{-}= w(i)
 	\end{equation}
-	\item \textbf{Case 4.}\hypertarget{METIS_case_4} If $C_i[P[i]] = 0$, i.e., $i$ has no internal degree, then moving $i$ to any partition $k \in N_i$ yields an additional gain contribution of
+	\item \textbf{Case 4.}\hypertarget{METIS_case_4} If $C_i[P[i]] = 0$, i.e., $i$ has no internal degree, then moving $i$ to any partition $k \in N_i$ yields an additional gain contribution of:
 	\begin{equation}
 		G_i[k] \mathrel{+}= w(i)
 	\end{equation}
 \end{enumerate}
-For every adjacent boundary vertex $v$ visited, we check each of the cases above for every partition in $N_{iv}$, $N_{i-v}$ or $N_i$, depending on the case. These cases represent all possible changes in communication volume when moving a vertex. Algorithm~\ref{alg:cap} in Section~\ref{cv_calc_implementation} shows how the gain is calculated for every vertex $i$ being considered moved. In turn, Section~\ref{sec:METIS refinement} shows how the gain vector $G$ is used during refinement to decide vertex moves.
+For every neighboring vertex $v$, we check each cases for every partition in $N_{iv}$, $N_{i-v}$, or $N_i$, depending on the case; together these cases cover all possible changes in communication volume when moving a candidate vertex $i$. 
+
+In Section~\ref{sec:preparation for refinement} the boundary set is filtered using edge-cut gain. When using VOL, we apply the same filtering with the calculations described in this section. Unlike with edge-cut, there is no general equation that determines whether moving a given vertex will yield a positive gain. Instead, we must visit all neighbors of a vertex to correctly evaluate the gains of possible moves. This requires some changes to the preparation phase before refinement. 
+
+METIS solves this by adding the gain calculation as a final step after preparation. Once the graph has been projected and all underlying structures have been recomputed, a full scan of the graph is performed to evaluate the possible gains for every vertex. Algorithm~\ref{alg:cap} presents the full procedure for evaluating the gain vectors of the boundary vertices. In order to filter out negative moves, METIS looks at the highest value in each gain vector and adds only the vertices with non-negative gain to the boundary set. Section~\ref{sec:METIS refinement} shows how the resulting gain vector $G_i$ is used during refinement.
+
+\begin{algorithm}[H]
+	\caption{VOL gain calculation}\label{alg:cap}
+	\begin{algorithmic}
+		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
+		\ForAll{$i \in V$}									
+			\State $G_i \gets \emptyset$					\Comment{Reset gain vector}
+			\If{$|N_i|>0$}										\Comment{Only visit vertices with neighboring partitions}
+				\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
+					\For{$n = 0$ \textbf{to} $\text{nparts} - 1$}
+						\If{n $\in N_i$ \textbf{AND} n $\in N_v$}
+							\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
+						\ElsIf{n $\in N_i$ \textbf{AND} n $\notin N_v$}
+							\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
+						\EndIf
+					\EndFor
+		
+					\If{$P[i] = P[v]$}
+						\ForAll{$n \in N_{i-v}$}
+							\State $G_i[n] \mathrel{-}= w(i)$				\Comment{Case 1}
+						\EndFor
+					\ElsIf{$P[i] \neq P[v]$ \textbf{AND} $C_v[P[i]] = 1$}	
+						\ForAll{$n \in N_{iv}$}
+							\State $G_i[n] \mathrel{+}= w(i)$				\Comment{Case 2}
+						\EndFor
+					\ElsIf{$P[i] \neq P[v]$ \textbf{AND} $C_v[P[i]] > 1$}
+						\ForAll{$n \in N_{i-v}$}
+							\State $G_i[n] \mathrel{-}= w(i)$				\Comment{Case 3}
+						\EndFor
+					\EndIf
+				\EndFor	
+				\If{$C_i[P[i]] = 0$}
+					\ForAll{$n \in N_i$}
+						\State $G_i[n] \mathrel{+}= w(i)$				\Comment{Case 4}
+					\EndFor
+				\EndIf
+				\If{MAX($G_i$) $\geq 0$}
+					\State BoundarySet.add($i$)			\Comment{Store boundary vertices with positive max gain}
+				\EndIf
+			\EndIf
+		\EndFor	
+	\end{algorithmic}
+\end{algorithm}
 
 \section{NVOL gain calculation} \label{Partition specific gain calculation}
-This section extends the VOL gain calculation from Section~\ref{METIS gain calculation}. The VOL gain contains no information about which partition is affected by a move, information that is required to use NVOL during refinement. Here we show how to decompose the communication volume gain into its individual contributions to each partition. Once computed, this decomposition can be used to refine the graph; how NVOL uses it is discussed in Section~\ref{sec:NVOL refinement}.
+We now present our novel gain calculation used in NVOL. Whereas VOL aims to minimize the total communication volume of a partitioned graph, NVOL requires finer information to determine what counts as a positive gain for each partition. This is vital for NVOL's refinement, which depends on how each partition's outgoing volume changes. This section shows how to calculate the partition-specific communication volume gain and how to implement it in the multilevel $k$-way partitioning algorithm.
 
-In order to calculate the volume for a given partition $n$, consider a subset of boundary vertices where each vertex is part of the same partition. The outgoing communication volume associated with partition $n$ is then given by
+Before diving into the gain calculation, we need to define how the outgoing communication volume is computed for a specific partition. For a partition $a$, the partition-specific outgoing communication volume $PV$ is given by
 \begin{equation} \label{partition_volume}
-	\mathrm{partition\quad volume}[n] = \sum_{v \in V_b \mid P[v] = n} \left| N_v \right| w(v)
+	PV[a] = \sum_{v \in V_b \mid P[v] = a} \left| N_v \right| w(v)
 \end{equation}
+Consider Figure~\ref{tot_vol_example} again. By using Equation~\ref{partition_volume}, we can calculate the outgoing communication volume of each partition. As before, we assume unit weights. Both vertices in the red partition satisfy $v \in V_b$, as both have edges to other partitions. Vertex $A$ has two neighbor partitions, while $B$ has only one, resulting in $PV[\mathrm{red}] = 3$. The blue partition has only two boundary vertices: $E$ and $C$. Just like the red partition, $PV[\mathrm{blue}] = 3$: $C$ has two neighbors and $E$ has one. Finally, the green partition's only vertex has two neighbors, resulting in $PV[\mathrm{green}] = 2$.
 
-We introduce a table $SG_i$, where each row corresponds to a source partition and each column to a destination partition for vertex $i$. The entry $SG_i[n][k]$ represents the gain contribution to partition $n$ when $i$ is moved to partition $k$. In a graph with $m$ partitions, a vertex \textit{i} to partition \textit{n} the total gain satisfies
+Whereas VOL uses a 1D gain vector $G_i$ that summarizes the total effect of moving $i$ to each destination, NVOL needs to know which partitions absorb that change. We therefore replace the gain vector with a 2D structure that decomposes the gain by affected partition. We introduce the gain table $SG_i$, where each row corresponds to an affected partition and each column to a destination partition for a vertex $i$. The entry $SG_i[a][b]$ represents the gain in outgoing communication volume for partition $a$ when $i$ is moved to partition $b$. This structure, in contrast to the gain vector $G$, is essential for performing partition-specific volume operations. In a graph with $m$ partitions, for a move of vertex $i$ to partition $b$, the total gain satisfies:
 \begin{equation}
-	\sum_{t=0}^{m-1} SG_i[t][n] = G_i[n]
+	\sum_{t=0}^{m-1} SG_i[t][b] = G_i[b]
 \end{equation}
-i.e., the sum of each column in $SG_i$ equals the corresponding entry in $G_i$. For a candidate vertex \textit{i} being considered for a move, the partition-specific gain contributions to all possible destination partitions are evaluated for each neighbor $v \in V^{\mathrm{adj}}_i$ as follows:
+i.e., the sum of each column in $SG_i$ equals the corresponding entry in $G_i$. 
+
+With this structure in place, we now describe how its entries are computed. For a candidate vertex \textit{i} being considered for a move, the partition-specific gain resulting from moving $i$ to a partition is evaluated by iterating over all neighboring vertices $v \in V^{\mathrm{adj}}_i$. The contribution to $SG_i$ depends on the relationship between $i,v$, and their partitions. Since this calculation is based on the same communication volume formulation as in Section~\ref{METIS gain calculation}, all volume changes are covered by the same four cases, but the operations performed in each case differ:
+
 \begin{enumerate} [label=\phantom{1.}]
-	\item \textbf{Case 1.} \hypertarget{NVOL_case_1} If $P[v] = P[i]$, then moving $i$ to any partition $k \in N_{i-v}$ removes a shared inter-partition connection. This affects the source partition:
+	\item \textbf{Case 1.} \hypertarget{NVOL_case_1} If $P[v] = P[i]$, then moving $i$ to any partition $k \in N_{i-v}$ creates a shared inter-partition connection. This affects the source partition:
 	\begin{equation}
 		SG_i[P[i]][k] \mathrel{-}= w(i)
 	\end{equation}
@@ -123,7 +174,7 @@ i.e., the sum of each column in $SG_i$ equals the corresponding entry in $G_i$. 
 	\begin{equation} \label{case 2 nvol}
 		SG_i[P[v]][k] \mathrel{+}= w(i)
 	\end{equation}	
-	\item \textbf{Case 3.} \hypertarget{NVOL_case_3} If $P[v] \neq P[i]$ and $C_v[P[i]] > 1$, then moving $i$ to any partition $k \in N_{i-v}$, introduces a new inter-partition connection. This contributes negatively to partition $P[v]$:
+	\item \textbf{Case 3.} \hypertarget{NVOL_case_3} If $P[v] \neq P[i]$ and $C_v[P[i]] > 1$, then moving $i$ to any partition $k \in N_{i-v}$ introduces a new inter-partition connection. This contributes negatively to partition $P[v]$:
 	\begin{equation}
 		SG_i[P[v]][k] \mathrel{-}= w(i)
 	\end{equation}	
@@ -132,21 +183,69 @@ i.e., the sum of each column in $SG_i$ equals the corresponding entry in $G_i$. 
 		SG_i[k][k] \mathrel{+}= w(i)
 	\end{equation}
 \end{enumerate}
-It is also necessary to account for how both the source and destination partitions are affected by a vertex move. Although such a move redistributes communication volume between partitions, it does not alter the total communication volume of the graph. As discussed previously, NVOL requires precise tracking of how each move impacts individual partitions. When vertex $i$ is moved to partition $k$, this induces an additional gain contribution given by
+
+The cases above capture the per-neighbor effect of a move. They do not, however, account for the redistribution of $i$'s own contribution to outgoing volume. Moving $i$ removes outgoing volume from the source partition's volume and adds it to the destination's partition. This contribution depends solely on vertex $i$, not on any specific neighbor, so it is applied once per potential move:
 \begin{align}
 	SG_i[P[i]][k] &\label{eq:source_global_gain} \mathrel{+}= \left| N_i \right| \cdot w(i),\\
 	SG_i[k][k]    &\label{eq:destination_global_gain}\mathrel{-}= \left| N_i \right| \cdot w(i).
 \end{align}
-This is referred to as a global term operation, as it reflects the overall redistribution of communication volume between the source and destination partitions of vertex $i$, rather than interactions with individual neighbor vertices. Equation~\ref{eq:source_global_gain} represents the volume leaving the source partition, while Equation~\ref{eq:destination_global_gain} the volume the destination receives. Consequently, it is computed once per vertex move, in contrast to the neighbor specific gain contributions described earlier, which are evaluated separately for each adjacent vertex. 
+This is referred to as a global term operation, as it reflects the overall redistribution of communication volume between the source and destination partitions of vertex $i$, rather than interactions with individual neighbor vertices. Equation~\ref{eq:source_global_gain} represents the volume leaving the source partition, while Equation~\ref{eq:destination_global_gain} represents the volume the destination receives. Consequently, it is computed once per vertex move, in contrast to the neighbor-specific gain contributions described earlier, which are evaluated separately for each adjacent vertex. 
 
-Apart from this distinction, both strategies follow the same case structure; the principal difference lies in how they store the gain information. Rather than recording only the magnitude of the change, NVOL also tracks which partition is affected. As it will be shown in Section~\ref{sec:NVOL refinement}, the gain table is essential for enforcing the logic used in NVOL, which permits moves that improves a single partition regardless of the total communication volume.
+Beyond the addition of the global term, both strategies follow the same case structure; the principal difference lies in how they store the gain information. Rather than recording only the magnitude of the change, NVOL also tracks which partition is affected. Section~\ref{sec:NVOL refinement} shows that the gain table is essential for enforcing the logic used in NVOL, which permits moves that improve a single partition regardless of the total communication volume.
+
+Ideally, this calculation should be used to filter the boundary set during the preparation phase. However, due to some implementation constraints discussed in Section~\ref{sec: implementing NVOL}, this was not the case for NVOL. In short, the reason is that storing a gain table for each vertex would require too much memory for it to be a viable option. Instead, the gain calculation is performed during refinement, building the gain table for one boundary vertex at a time. Vertices in the boundary set are filtered using VOL's gain calculation; this is a conservative filter that may exclude some vertices NVOL would otherwise keep. Algorithm~\ref{alg:nvol} shows how the gain table is calculated for a boundary vertex $i$ under consideration.
+\vfill
+\clearpage
+\begin{algorithm}[H]
+	\caption{NVOL gain calculation}\label{alg:nvol}
+	\begin{algorithmic}
+		\State \textbf{Input:} boundary vertex $i$ under consideration
+		\State $SG_i[a][b] \gets 0 \ \forall a, b$			\Comment{Reset gain table}
+		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
+		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
+			\For{$n = 0$ \textbf{to} $\text{nparts} - 1$}
+				\If{n $\in N_i$ \textbf{AND} n $\in N_v$}
+					\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
+				\ElsIf{n $\in N_i$ \textbf{AND} n $\notin N_v$}
+					\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
+				\EndIf
+			\EndFor
+		
+			\If{$P[i] = P[v]$}
+				\ForAll{$n \in N_{i-v}$}
+					\State $SG_i[P[i]][n] \mathrel{-}= w(i)$				\Comment{Case 1}
+				\EndFor
+			\ElsIf{$P[i] \neq P[v]$ \textbf{AND} $C_v[P[i]] = 1$}	
+				\ForAll{$n \in N_{iv}$}
+					\State $SG_i[P[v]][n] \mathrel{+}= w(i)$				\Comment{Case 2}
+				\EndFor
+			\ElsIf{$P[i] \neq P[v]$ \textbf{AND} $C_v[P[i]] > 1$}
+				\ForAll{$n \in N_{i-v}$}
+					\State $SG_i[P[v]][n] \mathrel{-}= w(i)$				\Comment{Case 3}
+				\EndFor
+			\EndIf
+			\State $N_{iv}\gets \emptyset$							
+			\State $N_{i-v}\gets \emptyset$
+		\EndFor	
+		
+		\ForAll{$n \in N_i$}
+			\State $SG_i[P[i]][n] \mathrel{+}= |N_i|\cdot w(i)$		\Comment{Global term operations}
+			\State $SG_i[n][n] \mathrel{-}= |N_i|\cdot w(i)$
+			\If{$C_i[P[i]] = 0$}
+				\State $SG_i[n][n] \mathrel{+}= w(i)$				\Comment{Case 4}
+			\EndIf
+		\EndFor
+		
+	\end{algorithmic}
+\end{algorithm}
+
 
 \section{Examples}
 To better understand the definitions of communication volume and gain, we present a sequence of illustrative examples. Each example highlights a particular configuration and demonstrates how gain contributions arise under different vertex moves.
-\subsection{Two Partition example}
+\subsection{Two partition example}
 Consider the graph in Figure~\ref{3}, consisting of five vertices with unit weights. The graph is partitioned into two subsets: the red partition containing vertices $\{A, B, C\}$, and the blue partition containing vertices $\{D, E\}$. Using Equation~\ref{total_volume}, the total communication volume is $4$.
 
-\begin{figure}[H]
+\begin{figure}[h]
 	\centering
 	\begin{minipage}[t]{.4\textwidth}
 		\centering
@@ -164,7 +263,7 @@ Consider the graph in Figure~\ref{3}, consisting of five vertices with unit weig
 
 Vertex \textit{A} has one edge to the blue partition and contributes $1$ to the communication volume. Vertex \textit{B} has two edges incident to the blue partition, but contributes only $1$ under the given definition. Similarly, vertices \textit{D} and \textit{E} each contribute $1$. In contrast, vertex \textit{C} contributes nothing, as all its incident edges are internal to its partition.
 	
-Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B$ has size two. In practice, however, $G_B$ effectively has size one, since $G_B[red]$ is always zero: a vertex moving from its source partition to the source partition is equivalent to no move at all.
+Now consider moving vertex \textit{B} from the red partition to the blue partition, as shown in Figure~\ref{4}. We calculate the gain using the global strategy (Section~\ref{METIS gain calculation}). Let \textit{B} be the candidate vertex with neighbors $\{A, C, D, E\}$. Since there are two partitions, the gain vector $G_B$ has size two. In practice, however, $G_B$ effectively has size one, since $G_B[\text{red}]$ is always zero: a vertex moving from its source partition to the source partition is equivalent to no move at all.
 
 \paragraph{Vertex \textit{A}.}
 Vertices \textit{A} and \textit{B} are in the same partition and both already have connections to the blue partition. Hence, the set $N_{B-A}$ is empty and no gain contribution arises.
@@ -370,120 +469,9 @@ Figures~\ref{case4_example_moved_blue} and~\ref{case4_example_moved_green} show 
 			\label{case4_example_moved_green}
 		\end{minipage}
 \end{figure}
-\section{Implementation}\label{cv_calc_implementation}
-We now describe how the calculation of communication volume change is integrated into the multilevel framework. As mentioned previously, we have used METIS as the base on which to develop NVOL. The following description bridges the formal definitions above and the implemented code.
 
-\subsection{VOL gain implementation} \label{sec:global_gain_imp}
-In Section~\ref{sec:preparation for refinement} the boundary set is computed using edge cut gain to filter and order it. When using VOL, we need to do the same thing using the calculations described in this chapter. Unlike the edge-cut metric, we cannot state for a given vertex whether moving it will lead to a positive gain or not. As stated in Section~\ref{sec:preparation for refinement}, we can deduce whether moving a vertex is guaranteed to give negative gain. This is not transferable to communication volume metrics.  
-
-With communication volume, it is necessary to visit all neighbors of a vertex to correctly evaluate the gains of possible moves. This makes the calculation difficult to integrate directly into the preparation phase before refinement. In METIS, this issue was resolved by adding the gain calculation as a final step after preparation. Once the graph has been projected and all underlying structures have been recomputed, a full scan of the graph is performed to evaluate the possible gains for every vertex.
-
-\begin{algorithm}[h]
-	\caption{Total gain calculation}\label{alg:cap}
-	\begin{algorithmic}
-		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
-		\ForAll{$i \in V$}
-		\If{$|N_i|>0$}										\Comment{Only visit vertices with neighboring partitions}
-		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
-		\For{n = 0; n < nparts}
-		\If{n $\in N_i$ \textbf{AND} n $\in N_v$}
-		\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
-		\ElsIf{n $\in N_i$ \textbf{AND} n $\notin N_v$}
-		\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
-		\EndIf
-		\EndFor
-		
-		\If{$P[i] = P[v]$}
-		\ForAll{$n \in N_{i-v}$}
-		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 1}
-		\EndFor
-		\ElsIf{$P[i] \mathrel{!}= P[v]$ \textbf{AND} $C_v[P[i]] = 1$}	
-		\ForAll{$n \in N_{iv}$}
-		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 2}
-		\EndFor
-		\ElsIf{$P[i] \mathrel{!}= P[v]$ \textbf{AND} $C_v[P[i]] > 1$}
-		\ForAll{$n \in N_{i-v}$}
-		\State $G[n] \mathrel{-}= w(i)$				\Comment{Case 3}
-		\EndFor
-		\EndIf
-		\EndFor	
-		\If{$C_i[P[i]] = 0$}
-		\ForAll{$n \in N_i$}
-		\State $G[n] \mathrel{+}= w(i)$				\Comment{Case 4}
-		\EndFor
-		\EndIf
-		\State BoundarySet.add(MAX($G_v$))			\Comment{Order by highest possible gain}
-		\EndIf
-		\EndFor	
-	\end{algorithmic}
-\end{algorithm}
-
-\subsection{NVOL gain implementation} \label{sec:partition specific gain imp}
-The implementation of NVOL's gain calculation required a different approach, even though the logic in the inner loop is very similar. Before starting refinement, METIS calculates and stores the gain of all boundary vertices. However, NVOL requires significantly more memory: for a gain vector of 10 elements, NVOL's gain table contains 90 entries. For this reason, we opted for an on-the-fly approach, computing the gain table for each vertex as it is visited during refinement. Beyond the memory overhead, a precomputed gain table would also require an update procedure to maintain consistency after each move. As this is not directly relevant to the research questions of this thesis, we leave this as future work, discussed further in Chapter~\ref{chap_future_work}.
-
-NVOL is implemented directly in the refinement stage. During preparation, it uses the same structure as Section~\ref{sec:global_gain_imp}, ordering vertices based on their total gain. Once refinement begins, the algorithm visits every vertex in the boundary set. For each vertex $i$ under consideration, we run the algorithm below:
-\begin{algorithm}[h]
-	\caption{ gain calculation}\label{alg:nvol}
-	\begin{algorithmic}
-		\State nparts $\gets k$ 							\Comment{Graph with $k$ partitions}
-		\ForAll{$v \in V^{\mathrm{adj}}_i$}					\Comment{Visit all adjacent vertices of i}
-		\For{n = 0; n < nparts}
-		\If{n $\in N_i$ \textbf{AND} n $\in N_v$}
-		\State $N_{iv}$.add(n)					\Comment{Shared partitions between \textit{i} and \textit{v} ($N_{iv}$)}
-		\ElsIf{n $\in N_i$ \textbf{AND} n $\notin N_v$}
-		\State $N_{i-v}$.add(n)					\Comment{Partitions only \textit{i} is connected to ($N_{i-v}$)}
-		\EndIf
-		\EndFor
-		
-		\If{$P[i] = P[v]$}
-		\ForAll{$n \in N_{i-v}$}
-		\State $SG[P[v]][n] \mathrel{-}= w(i)$				\Comment{Case 1}
-		\EndFor
-		\ElsIf{$P[i] \mathrel{!}= P[v]$ \textbf{AND} $C_v[P[i]] = 1$}	
-		\ForAll{$n \in N_{iv}$}
-		\State $SG[P[v]][n] \mathrel{+}= w(i)$				\Comment{Case 2}
-		\EndFor
-		\ElsIf{$P[i] \mathrel{!}= P[v]$ \textbf{AND} $C_v[P[i]] > 1$}
-		\ForAll{$n \in N_{i-v}$}
-		\State $SG[P[v]][n] \mathrel{-}= w(i)$				\Comment{Case 3}
-		\EndFor
-		\EndIf
-		\EndFor	
-		\If{$C_i[P[i]] = 0$}
-		\ForAll{$n \in N_i$}
-		\State $SG[n][n] \mathrel{+}= w(i)$				\Comment{Case 4}
-		\EndFor
-		\EndIf
-	\end{algorithmic}
-\end{algorithm}
-
-%\begin{figure}[H]
-%	\centering
-%	\begin{minipage}[t]{.4\textwidth}
-%		\centering
-%		\includegraphics[width=.7\linewidth]{pictures/three_partition_2}
-%		\caption{Vertex $E$ has a volume of 1}
-%		\label{11}
-%	\end{minipage}\qquad
-%	\begin{minipage}[t]{.4\textwidth}
-%		\centering
-%		\includegraphics[width=.7\linewidth]{pictures/three_partition_2_moved}
-%		\caption{Vertex $E$ has a volume of 2 after the move}
-%		\label{12}
-%	\end{minipage}
-%\end{figure}
-%\begin{figure}[H]
-%	\centering
-%	\begin{minipage}[t]{.4\textwidth}
-%		\centering
-%		\includegraphics[width=.7\linewidth]{pictures/three_partition_2_1}
-%		\caption{Vertex $E$ has a volume of 2}
-%		\label{13}
-%	\end{minipage}\qquad
-%	\begin{minipage}[t]{.4\textwidth}
-%		\centering
-%		\includegraphics[width=.7\linewidth]{pictures/three_partition_2_1_moved}
-%		\caption{Vertex $E$ still has volume of 2 after the move}
-%		\label{14}
-%	\end{minipage}
-%\end{figure}
+%\section{Implementation}
+%%\label{cv_calc_implementation}
+%We now describe how the calculation of communication volume change is integrated into the multilevel framework. As mentioned previously, we have used METIS as the base on which to develop NVOL. The following description bridges the formal definitions above and the implemented code.
+%
+%\subsection{NVOL gain implementation} \label{sec:partition specific gain imp}
