@@ -53,7 +53,7 @@ NVOL will look first for a candidate move that does not increase the global $MV^
 
 Just like VOL, NVOL uses the fudge factor to influence the weight constraint; however, it is used slightly differently. Section~\ref{sec:encourage more moves} explains how the fudge factor is exploited by NVOL to promote and prohibit moves at the same time. 
 
-Algorithm~\ref{alg:ref_nvol} shows how GR chooses a vertex move using NVOL. The algorithm consists of a main loop iterating over all possible destinations of the boundary vertex. In an inner loop, it computes the highest volume after the move. To do this, it scans all entries $SG_i[k][j]$ for $k \in N_i \cup \{P[i]\}$ and computes $PV[k] + SG_i[k][j]$, where $PV[k]$ is the volume partition $k$ holds before the move. We include $P[i]$ in the loop to also record how the source partition is affected by the move. The partition achieving the highest post-move volume is recorded as the local top partition, with volume \texttt{tmpVol} and partition id \texttt{tmpPid}. The remaining if-else branches encode the three ranking criteria described above. At the end, if a candidate has been found, the move is performed.
+Algorithm~\ref{alg:ref_nvol} shows how GR chooses a vertex move using NVOL. The algorithm consists of a main loop iterating over all possible destinations of the boundary vertex. In an inner loop, it computes the highest volume after the move. To do this, it scans all entries $SG_i[k][j]$ for $k \in N_i \cup \{P[i]\}$ and computes $PV[k] - SG_i[k][j]$, where $PV[k]$ is the volume partition $k$ holds before the move. The gain is subtracted as a positive gain equal a decrease in volume and vice versa. We include $P[i]$ in the loop to also record how the source partition is affected by the move. The partition achieving the highest post-move volume is recorded as the local top partition, with volume \texttt{tmpVol} and partition id \texttt{tmpPid}. The remaining if-else branches encode the three ranking criteria described above. At the end, if a candidate has been found, the move is performed.
 
 \begin{algorithm}[h]
 	\caption{GR with NVOL}\label{alg:ref_nvol}
@@ -67,8 +67,8 @@ Algorithm~\ref{alg:ref_nvol} shows how GR chooses a vertex move using NVOL. The 
 				\State tmpVol $\gets 0$
 				\State tmpPid $\gets -1$
 				\ForAll{$k \in N_i \cup P[i]$}
-					\If{tmpVol$< PV[k] + SG_i[k][j]$}
-						\State tmpVol $\gets PV[k] + SG_i[k][j]$
+					\If{tmpVol$< PV[k] - SG_i[k][j]$}
+						\State tmpVol $\gets PV[k] - SG_i[k][j]$
 						\State tmpPid $\gets k$
 					\EndIf
 				\EndFor
@@ -112,3 +112,5 @@ A deliberate design choice in NVOL was to promote a higher number of vertex move
 The goal of this design is to increase the number of moves NVOL performs during a refinement stage. During testing, we experimented with a stricter criterion that required every accepted move to improve the local top volume. Under this stricter rule, significantly fewer vertices were moved during refinement. On average, the stricter rule performed half as many moves as the more relaxed approach. By encouraging more moves, we observed two effects. First, NVOL was able to explore more solutions: since more moves were performed, more configurations were evaluated. Second, we increased the chance of avoiding getting stuck in a local maximum. If no move could improve the partition's volume, GR would remain stuck, unable to find an improving move. By allowing a ``worsening'' move, we increase the chance of finding better solutions. Since the condition still guarantees that the global maximum is never exceeded, the objective function's value is protected throughout the process.
 
 To prevent this relaxed condition from accepting moves that are too damaging, NVOL incorporates the fudge factor as a safety mechanism. The fudge factor is used to adjust the maximum allowed partition weight; however, in NVOL we multiply it by the gain for the top partition. Specifically, for a vertex $i$, the partition $m$ with the highest local volume, and a destination partition $j$, we multiply the fudge factor by $SG_i[m][j]$. This ensures that moves with a negative impact on the local top partition are more likely to be filtered out by the weight constraint. By making the maximum allowed weight smaller, it becomes harder to accept a move. In the opposite case, it acts as a relaxing factor, allowing moves that improve the local top. In this way, $f$ acts as a soft penalty that discourages harmful moves and promotes positive ones.
+
+Chapter~\ref{chap:NVOL tooling} describes how NVOL was implemented giving a description of how Algorithm~\ref{alg:ref_nvol} was implemented into the METIS source code.

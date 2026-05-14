@@ -1,0 +1,51 @@
+\begin{tikzpicture}[
+	box/.style       = {draw, rounded corners, minimum width=2.5cm,
+		minimum height=0.7cm, fill=blue!10,
+		font=\ttfamily\small},
+	cell/.style      = {draw, minimum width=0.8cm, minimum height=0.65cm,
+		font=\scriptsize, inner sep=2pt},
+	pinfocell/.style = {cell, fill=orange!20},
+	vrtcell/.style   = {cell, fill=green!20},
+	gaincell/.style  = {cell, fill=gray!15},
+	ptr/.style       = {->, >=Stealth, thick},
+%	lbl/.style       = {font=\footnotesize\itshape}
+	]
+	
+	% graph_t at the top
+	\node[box] (graph) at (0,0) {graph\_t};
+	
+	% --- pinfo_t array (left branch) ---
+	\node[pinfocell]                  (p0) at (-4.2,-2.2) {vol};
+	\node[pinfocell, right=0pt of p0] (p1) {vol};
+	\node[pinfocell, right=0pt of p1] (p2) {vol};
+	\node[right=0pt of p2, minimum width=0.5cm] (pd) {\ldots};
+	\node[pinfocell, right=0pt of pd] (pk) {vol};
+	\node[ below=2pt of p1] {array of \texttt{pinfo\_t} ($k$ entries)};
+	
+	% --- vol_refinement_table array (right branch) ---
+	\node[vrtcell]                  (v0) at (2.6,-2.2) {$\ast$};
+	\node[vrtcell, right=0pt of v0] (v1) {$\ast$};
+	\node[vrtcell, right=0pt of v1] (v2) {$\ast$};
+	\node[right=0pt of v2, minimum width=0.5cm] (vd) {\ldots};
+	\node[vrtcell, right=0pt of vd] (vk) {$\ast$};
+	\node[above=2pt of vk, align=center] {array of \texttt{vol\_refinement\_table} \\ ($k$ entries)};
+	
+	% --- one gain_list, hanging off v0 ---
+	\node[gaincell]                  (g0) at (1.9,-4.3) {gain};
+	\node[gaincell, right=0pt of g0] (g1) {gain};
+	\node[gaincell, right=0pt of g1] (g2) {gain};
+	\node[right=0pt of g2, minimum width=0.5cm] (gd) {\ldots};
+	\node[gaincell, right=0pt of gd] (gk) {gain};
+	\node[ below=2pt of g2] {\texttt{gain\_list} ($k$ integers)};
+	
+	% --- L-shaped pointer arrows from graph_t ---
+	\draw[ptr] (graph.west) -| (p0.north);
+	\draw[ptr] (graph.east) -| (v0.north);
+	
+	% --- pointer from one vrt cell to its gain_list ---
+	\draw[ptr] (v0.west) -| (g0.north);
+	
+	% --- note that other entries follow the same pattern ---
+%	\node[font=\scriptsize, gray] at (4.2,-4.3) {$v_1,\ldots,v_{k-1}$: same pattern};
+	
+\end{tikzpicture}

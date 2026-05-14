@@ -19,7 +19,7 @@ Efficiently distributing computation across processors is central to high-perfor
 	\item \textbf{RQ2}: Can the performance of a parallel application be improved in practice by using a partition-aware objective function?
 \end{itemize}
 
-NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm. After an initial partition is performed, the partitions are gradually refined by moving vertices between partitions. NVOL gathers information about how every partition's communication volume is affected by a vertex move, allowing it to correctly evaluate how much partition $a$ will change if a vertex $v$ is moved to another partition $b$. Using this information, NVOL prioritizes moves that improve the per-partition maximum. No move that increases the maximum volume held by a single partition is accepted. This means that in some cases NVOL might even accept moves that increase the total communication volume, as long as they decrease the per-partition maximum. The goal is to provide more balanced partitions, avoiding overloading some for the sake of a better total communication volume.
+NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm. After an initial partition is performed, the partitions are gradually refined by moving vertices among partitions. NVOL gathers information about how every partition's communication volume is affected by a vertex move, allowing it to correctly evaluate how much partition $a$ will change if a vertex $v$ is moved to another partition $b$. Using this information, NVOL prioritizes moves that improve the per-partition maximum. No move that increases the maximum volume held by a single partition is accepted. This means that in some cases NVOL might even accept moves that increase the total communication volume, as long as they decrease the per-partition maximum. The goal is to provide more balanced partitions, avoiding overloading some for the sake of a better total communication volume.
 
 \section{Thesis Structure}
 \textbf{Chapter 2:} \textit{Background}
@@ -28,7 +28,7 @@ NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm.
 \end{quote}
 \textbf{Chapter 3:} \textit{Multilevel $k$-way Graph Partitioning}
 \begin{quote}
-	Chapter 3 presents the multilevel $k$-way graph partitioning algorithm on which NVOL is built. This approach offers a good balance between partition quality and runtime, making it a popular choice for large graphs. The chapter focuses on the standard formulation, which uses edge-cut; the following chapters then extend the algorithm to support volume-based objective functions such as NVOL.
+	Chapter 3 presents the multilevel $k$-way graph partitioning algorithm on which NVOL is built. This approach offers a good balance among partition quality and runtime, making it a popular choice for large graphs. The chapter focuses on the standard formulation, which uses edge-cut; the following chapters then extend the algorithm to support volume-based objective functions such as NVOL.
 \end{quote}
 \textbf{Chapter 4:} \textit{Communication Volume Calculation}
 \begin{quote}
@@ -44,7 +44,7 @@ NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm.
 \end{quote}
 \textbf{Chapter 7:} \textit{Results}
 \begin{quote}
-	Chapter 7 presents the results of running NVOL across a variety of 	graphs and partition counts. It compares the partitions across multiple metrics and models the runtime of executing the partitions produced by NVOL and METIS.
+	Chapter 7 presents the results of running NVOL across a variety of 	graphs and partition counts. It compares the partitions across multiple metrics and estimates of the resulting communication time among partitions produced by NVOL and METIS.
 \end{quote}
 \textbf{Chapter 8:} \textit{Conclusions and Future Work}
 \begin{quote}
