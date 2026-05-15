@@ -12,7 +12,7 @@ Most modern graph partitioning algorithms minimize \emph{edge-cut} (see Section~
 Karypis and Moulitsas highlighted the need for partitioning algorithms that account for heterogeneous architectures and proposed using \emph{communication volume} as an optimization objective function instead of edge-cut~\cite{moulitsas_architecture_2008}. This communication volume objective function was subsequently added into the METIS software package (see Section~\ref{sec:Metis very general description}). However, like the edge-cut objective function, METIS focuses on the total communication volume without considering how volume is distributed among partitions. Regardless of the hardware architecture, focusing only on the total volume of a partitioned graph may lead to bottlenecks in some partitions.
 
 Efficiently distributing computation across processors is central to high-performance computing, and graph partitioning is the standard technique for achieving this. In \textit{Graph Partitioning and Parallel Solvers: Has the Emperor No Clothes?}~\cite{HENDRICKSONB1998Gpap}, Hendrickson concludes that one of the key needs is to develop a more accurate metric for communication cost. Researchers have proposed alternative minimization objective functions that target per-processor communication metrics rather than global totals. An example is UMPa~\cite{umpa_2013}, which minimizes the maximum data sent by any single processor in a distributed memory setting. As Hendrickson noted, minimization objective functions that target communication costs are harder to optimize than the standard edge-cut, which partly explains their limited adoption.
-\section{Thesis Goal}
+\section{Thesis goal}
  In this thesis we present a partition-aware communication volume objective function called \textit{NVOL} (see Chapters~\ref{cv_calculation}-\ref{chapter5}). NVOL minimizes the \textit{per-partition} maximum outgoing communication volume, aiming to reduce uneven communication loads. To be able to correctly calculate the partition-specific change in communication volume we also develop a novel algorithm in Chapter~\ref{cv_calculation} to perform this calculation. Using the METIS software as our baseline multilevel $k$-way partitioner, we present a new implementation of a partition-aware objective function and address two questions: 
 \begin{itemize}
 	\item \textbf{RQ1}: Can a partition-aware objective function produce more balanced communication loads than a global one?
@@ -21,32 +21,32 @@ Efficiently distributing computation across processors is central to high-perfor
 
 NVOL is implemented in the refinement stage of the multilevel $k$-way algorithm. After an initial partition is performed, the partitions are gradually refined by moving vertices among partitions. NVOL gathers information about how every partition's communication volume is affected by a vertex move, allowing it to correctly evaluate how much partition $a$ will change if a vertex $v$ is moved to another partition $b$. Using this information, NVOL prioritizes moves that improve the per-partition maximum. No move that increases the maximum volume held by a single partition is accepted. This means that in some cases NVOL might even accept moves that increase the total communication volume, as long as they decrease the per-partition maximum. The goal is to provide more balanced partitions, avoiding overloading some for the sake of a better total communication volume.
 
-\section{Thesis Structure}
+\section{Thesis structure}
 \textbf{Chapter 2:} \textit{Background}
 \begin{quote}
-	Chapter 2 covers the fundamentals of graph partitioning. It surveys some of the algorithms in common use today, along with the main application areas in which they are applied.
+	Chapter 2 covers the fundamentals of graph partitioning. It surveys some of the algorithms in common use today, along with the main application areas for graph partitioning.
 \end{quote}
 \textbf{Chapter 3:} \textit{Multilevel $k$-way Graph Partitioning}
 \begin{quote}
-	Chapter 3 presents the multilevel $k$-way graph partitioning algorithm on which NVOL is built. This approach offers a good balance among partition quality and runtime, making it a popular choice for large graphs. The chapter focuses on the standard formulation, which uses edge-cut; the following chapters then extend the algorithm to support volume-based objective functions such as NVOL.
+	Chapter 3 presents the multilevel $k$-way graph partitioning algorithm. This approach offers a good balance between partition quality and runtime, making it a popular choice for large graphs. The chapter focuses on the standard formulation, which uses edge-cut as the objective function; the following chapters then extend the algorithm to support volume-based objective functions such as NVOL.
 \end{quote}
 \textbf{Chapter 4:} \textit{Communication Volume Calculation}
 \begin{quote}
-	Chapter 4 explains how communication volume change is evaluated for volume-based objective functions. It covers the calculation of both total communication volume and per-partition volume, beginning with formal definitions of the calculations followed by worked examples. The final sections describe how these calculations are integrated into the multilevel $k$-way algorithm.
+	Chapter 4 explains how communication volume change is evaluated for volume-based objective functions. It covers the calculation of both total communication volume and the novel per-partition outgoing communication gain calculation. Both are presented first with formal definitions of the calculations followed by a description of how these calculations are integrated into the multilevel $k$-way algorithm. The final section shows some worked examples.
 \end{quote}
 \textbf{Chapter 5:} \textit{Greedy Refinement Using Communication Volume}
 \begin{quote}
-	Chapter 5 covers the refinement stage and explains how it is implemented for volume-based objective functions. Building on Chapter 4, it shows how partitions can be refined using communication volume objective functions. The total communication volume objective function and NVOL are each treated in their own section, and both conclude with a simplified algorithm representing the implementation.
+	Chapter 5 covers the refinement stage and explains how the Greedy Refinement algorithm works with volume-based objective functions. Building on Chapter~\ref{cv_calculation}, it shows how the calculations for volume change are used when choosing how to refine a partition. The total communication volume objective function and NVOL are each treated in their own section.
 \end{quote}
-\textbf{Chapter 6:} \textit{METIS with NVOL and Supporting Tooling}
+\textbf{Chapter 6:} \textit{NVOL in METIS and Supporting Tooling}
 \begin{quote}
-	Chapter 6 presents the tools used in this thesis to run and analyze the multilevel $k$-way partitioning algorithm with NVOL. It introduces METIS, the partitioning framework that NVOL extends, and describes its input and output formats. It also presents a small collection of Python scripts developed alongside this work for preprocessing input graphs and analyzing the per-partition communication volumes produced by the experiments.
+	Chapter 6 starts with a general definition of the METIS framework before going into the implementation of NVOL. In this chapter we present how METIS was expanded to support and run NVOL. In the second part of the chapter we present a small collection of Python scripts developed alongside this work for preprocessing input graphs, analyzing results, and visually representing them. 
 \end{quote}
 \textbf{Chapter 7:} \textit{Results}
 \begin{quote}
-	Chapter 7 presents the results of running NVOL across a variety of 	graphs and partition counts. It compares the partitions across multiple metrics and estimates of the resulting communication time among partitions produced by NVOL and METIS.
+	Chapter 7 presents the results of running NVOL across a variety of graphs and partition counts. It compares the partitions across multiple metrics and estimates of the resulting communication time among partitions produced by NVOL and METIS optimizing for the total volume objective function.
 \end{quote}
 \textbf{Chapter 8:} \textit{Conclusions and Future Work}
 \begin{quote}
-	Chapter 8 concludes the thesis and evaluates the contributions of this project. It revisits the initial goals set out in Chapter 1 and discusses how well they have been fulfilled. It discusses some of the current shortcomings and how they might be addressed, and introduces new ideas that would build naturally on the NVOL implementation.
+	Chapter 8 concludes the thesis and evaluates the contributions of this project. It revisits the initial goals set out in Chapter 1 and discusses how well they have been fulfilled. It discusses some of the current shortcomings and how they might be addressed, and introduces new ideas that would build naturally on the NVOL objective function.
 \end{quote}

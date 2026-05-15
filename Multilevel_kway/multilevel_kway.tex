@@ -17,7 +17,7 @@ The multilevel partitioning problem uses the same definitions as in Section~\ref
 	\label{fig:multilevel-overview}
 \end{figure}
 
-\section{Coarsening Phase} \label{sec:coarsening}
+\section{Coarsening phase} \label{sec:coarsening}
 During the coarsening phase, a sequence of increasingly smaller graphs is constructed, maintaining a similar structure to the original graph with fewer degrees of freedom. The most common approach is to aggregate groups of vertices into a single coarse vertex through matching~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}. Formally, the idea is to contract pairs of matched vertices, where we define a matching as a set of edges no two of which share a vertex~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}. Since the goal of coarsening is to reduce the graph size, a matching is considered good if it is composed of many matched edges. To achieve this, \textit{maximal matchings} are used. A matching is maximal if any edge in the graph that is not contained in the matching has at least one of its endpoints matched~\cite{KarypisGeorge1998AFaH}. The following subsection describes in detail the implementation of Sorted Heavy Edge Matching (SHEM), which is the matching algorithm employed by the partitioner we used in this thesis. For further reading on other coarsening algorithms, we refer the reader to~\cite{buluc_recent_2016, KarypisGeorge1998AFaH}. 
 
 Once a matching is performed the coarse vertex has a weight equal to the sum of the weights of all the vertices it contains. Additionally, the coarse vertex receives all the edges of the vertices it contains. Vertices that are not matched are simply copied over to the smaller graph. This process is repeated until we reach a graph $G_m$ with a small enough number of vertices~\cite{karypis_analysis_1995}.
@@ -29,7 +29,7 @@ SHEM begins by generating a random permutation of the graph's vertices, which is
 
 The greedy nature of SHEM tends to preserve strong edge connections in the coarser graph, contributing to a significant reduction in total edge weight and, consequently, in the number of edge-cuts~\cite{KarypisGeorge1998AFaH, karypis_parallel_1999}. Karypis and Kumar show in~\cite{karypis_analysis_1995} that the coarser graph has lower total edge weight, and consequently a lower edge-cut. 
 
-\section{Initial Partitioning Phase} \label{sec:initial_partitioning}
+\section{Initial partitioning phase} \label{sec:initial_partitioning}
 Once the graph has been coarsened to the smallest level, the initial partitioning is performed. The goal of this stage is to produce $k$ roughly equal partitions before further refinement. Several partitioning algorithms can be used here, including spectral partitioning~\cite{hendrickson_multilevel_1995}, graph growing partitioning~\cite{KarypisGeorge1998AFaH}, and multilevel recursive bisection~\cite{simon_recursive_bisection}, among others. Since the graph is relatively small at this stage, the partitioning is fast. The partitioner we used, METIS, uses a multilevel recursive bisection approach.
 %Using the definition in Section~\ref{sec:gpp} we use graph growing partitioning (GGP) as the default bisection algorithm.
 
@@ -48,7 +48,7 @@ Despite the non-deterministic nature of the GGP algorithm, METIS produces the sa
 
 It is worth noting that for our volume based objective function we also use this approach based on edge-cut for the initial partition. There are a few reasons for this. Firstly, the initial partition is going to be heavily refined later during the uncoarsening phase, making the quality of the initial partition not as important. Additionally, algorithms like FM are fast and work well with edge-cut; using another objective function would make this phase significantly slower. For these reasons, it is reasonable to use edge-cut as the objective function for this first partitioning. 
 
-\section{Uncoarsening Phase} \label{sec:uncoarsening}
+\section{Uncoarsening phase} \label{sec:uncoarsening}
 The final step is the uncoarsening and refinement phase, during which the graph is gradually projected back to its original size. The coarsest graph $G_m$ is successively expanded through finer representations $G_{m-1}, G_{m-2}, \dots, G_1$. At each projection from $G_{i+1}$ to $G_i$, every vertex contained within a coarse vertex $v$ inherits the partition assignment that $v$ held in $G_{i+1}$. Once all coarse vertices at a given level have been expanded, the resulting partition is improved using local refinement heuristics.
 
 The partitioner we used, METIS, employs a variant of the Kernighan-Lin (KL) algorithm \cite{Kernighan_kl}, called Greedy Refinement (GR), to refine the graph. The KL algorithm iteratively swaps vertices among partitions of a bisection to minimize an objective function, continuing until no further improvement is possible and a local minimum is reached~\cite{karypis_multilevelk-way_1998}. Refining a $k$-way partition is significantly more complex since each vertex has $k - 1$ possible moves as opposed to just one move in a bisection~\cite{karypis_multilevelk-way_1998}. This substantially enlarges the optimization space and increases the computational cost, since a gain must be calculated for each possible move. The gain represents the improvement in the objective function's value resulting from relocating a vertex to a new partition.

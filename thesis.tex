@@ -74,7 +74,7 @@
 	
 	The service Claude, developed by Anthropic, has been used to improve the content of the thesis. A first version of the work was pasted in its entirety, and the model was given the prompt "Fix my grammar in this master thesis". The text was then iterated a few times through the model where new prompts were used to get the correct structure of the text. The final result was partially cut out, fact-checked, and mostly rewritten by the author.
 	
-	\begin{abstract}		
+	\chapter*{Abstract}		
 	Parallel applications are an increasingly important area of development. The goal of graph partitioners is to equally distribute the load across a parallel computer to improve runtime. Generally speaking, a parallel application is as slow as its slowest process, suggesting that improving the most heavily loaded partition would yield runtime gains.
 	
 	Most partitioners base their objective functions on global terms like total communication volume, which in turn may leave individual partitions with disproportionately large volume loads. We present NVOL, a new implementation of a partition-aware objective function within the METIS framework. The idea to optimize for the highest partition volume is not new, however, the implementation together with the required calculations to perform it are. With NVOL as the objective function, the refinement algorithm examines each partition's outgoing communication volume and performs only those moves that do not increase the maximum outgoing communication volume.  
@@ -82,12 +82,17 @@
 	We evaluate NVOL against METIS's own total communication volume objective function across 20 graphs from two datasets - a set of cardiac finite-element matrices and a selection of matrices from the SuiteSparse Matrix Collection - with each graph partitioned into 2 to 2048 parts. With NVOL, we got a lower maximum outgoing communication volume than METIS's volume objective function in most runs. For the SuiteSparse graphs, it wins 89\% of the time (mean improvement 9.2\%, peak 56.7\%) and for the cardiac finite-element runs 93\% of the time(mean 4.7\%, peak 17.6\%). Additionally, it produces more evenly distributed partition volumes overall. Using an estimate for communication time, parametrized by real machine bandwidths, NVOL yields the lowest maximum communication time per-partition in 65\% of our tests.
 		
  	NVOL yields the best results on numerical simulation graphs and shows good potential for citation networks when partitioned into a sufficiently large number of 	parts. It also looks promising for improving the communication time of the slowest process in a parallel application. However, the increased complexity of the objective function comes at the cost of partitioning time, averaging 7-11× slower than METIS running the total volume objective function. Even so, NVOL's good results and strong potential make it an interesting area of development.
-	\end{abstract}
 
-	\begin{preface}
-	Here comes your preface, including acknowledgments and thanks.
-	\end{preface}
+
+	\chapter*{Acknowledgments}
+	First and foremost, I would like to thank my supervisor, Xing Cai, without whom this thesis would not have been possible. Your continuous help and feedback throughout the project have been invaluable. You were always available when I had questions and kept me on the right path forward.
 	
+	I would also like to thank my secondary supervisor, James Trotter, who took part in several discussions that were central to the development of this thesis and who provided access to the Heart matrices.
+	
+	A big thanks goes to my parents, who supported me throughout these five years at university and helped me overcome every challenge I faced during this period. Thank you, Dad, for your valuable feedback on this thesis.
+	
+	Finally, I'd like to thank my girlfriend, who never stopped believing in me and always cheered me on. No matter how tough the project got, you always assured me that I would make it. 
+		
 	\tableofcontents{}                         
 	\listoffigures{}                           
 	\listoftables{}

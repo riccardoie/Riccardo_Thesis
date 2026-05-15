@@ -1,4 +1,4 @@
-\chapter{METIS with NVOL and Supporting Tooling}\label{chap:NVOL tooling}
+\chapter{NVOL in METIS and Supporting Tooling}\label{chap:NVOL tooling}
 Chapters~\ref{cv_calculation} and~\ref{chapter5} developed NVOL, our partition-specific communication-volume objective function, and showed how its integrated in the refinement phase. This chapter turns from theory to practice: it describes how NVOL was integrated into METIS, and the Python tooling developed alongside it to analyze and visualize the resulting partitions. The implementation and tools described here are used to produce the results presented in Chapter~\ref{chap:results}.
 
 The first section starts with a general description of METIS and how to run it. Section~\ref{sec: implementing NVOL} then details how the NVOL algorithm was integrated into METIS's C source. The second section presents the tools developed to help analyze the results. Together they form the complete experimental pipeline: the modified METIS produces the partitions, and the Python tools turn those partitions into the analyses we report in Chapter~\ref{chap:results}.
@@ -61,7 +61,7 @@ For the smaller graphs there is no difference, but for most graphs NVOL takes on
 
 Having described how NVOL is implemented and at what cost it runs, we now turn to the Python tooling built around it for analyzing and visualizing the partitions it produces.
 
-\section{Graph Tools} \label{sec:graph tools}
+\section{Graph tools} \label{sec:graph tools}
 In this section we present a few Python tools developed during this thesis to display and analyze the results produced by the partitioning algorithm, as well as to format graphs. All scripts are available in a public repository\footnote{\url{https://github.com/riccardoie/Graph-tools/tree/main}}. Each subsection presents one tool.
 
 \subsection{translate\_to\_metis}
